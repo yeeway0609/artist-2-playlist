@@ -19,7 +19,12 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <AuthSessionProvider session={session}>
-        <body className="antialiased">{children}</body>
+        <body className="antialiased min-h-dvh max-w-screen-sm mx-auto">
+          <main className="flex flex-col items-center py-10 px-4">
+            {children}
+          </main>
+          <footer className=""></footer>
+        </body>
       </AuthSessionProvider>
     </html>
   );

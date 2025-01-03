@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession, signOut, signIn } from "next-auth/react";
-import { PartialSearchResult } from "@spotify/web-api-ts-sdk";
+import { Artist } from "@spotify/web-api-ts-sdk";
 import { Button } from "@/components/ui/button";
 import sdk from "@/lib/spotifySdk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,13 +13,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import Image from "next/image";
 
 export default function Home() {
   const session = useSession();
   const [searchInput, setSearchInput] = useState("");
-  const [searchResults, setSearchResults] = useState(
-    {} as Pick<PartialSearchResult, "artists">
-  );
+  const [searchResults, setSearchResults] = useState<Artist[] | null>(null);
 
   const debouncedSearchArtist = useDebouncedCallback(async (input: string) => {
     if (!input) return;
@@ -27,7 +26,7 @@ export default function Home() {
     const results = await sdk.search(input, ["artist"]);
     if (results) {
       console.log(results);
-      setSearchResults(results);
+      setSearchResults(results.artists.items);
     }
   }, 300);
 
@@ -40,44 +39,41 @@ export default function Home() {
   if (!session || session.status !== "authenticated") {
     return (
       <div>
-        <h1>Spotify Web API Typescript SDK in Next.js</h1>
         <Button onClick={() => signIn("spotify")}>Sign in with Spotify</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-dvh max-w-screen-sm mx-auto">
-      <main className="flex flex-col items-center py-10 px-4">
-        <Avatar className="size-20">
-          <AvatarImage src={session.data.user?.image ?? undefined} />
-          <AvatarFallback>Avatar</AvatarFallback>
-        </Avatar>
-        <p className="text-3xl my-3">{session.data.user?.name}</p>
-        <Button onClick={() => signOut()}>Sign out</Button>
+    <>
+      <Avatar className="size-20">
+        <AvatarImage src={session.data.user?.image ?? undefined} />
+        <AvatarFallback>Avatar</AvatarFallback>
+      </Avatar>
+      <p className="my-3 text-3xl ">{session.data.user?.name}</p>
+      <Button onClick={() => signOut()}>Sign out</Button>
 
-        <Command shouldFilter={false}>
-          <CommandInput
-            placeholder="Type a command or search..."
-            value={searchInput}
-            onChangeCapture={handleSearchChange}
-          />
-          <CommandList>
-            {/* <CommandEmpty>No results found.</CommandEmpty> */}
-            {searchResults.artists?.items.slice(0, 5).map((artist) => (
-              <CommandItem key={artist.id}>
-                <img
-                  src={artist.images[0].url}
-                  className=" max-w-10 aspect-square"
-                  alt=""
-                />
-                <p>{artist.name}</p>
-              </CommandItem>
-            ))}
-          </CommandList>
-        </Command>
-      </main>
-      <footer className=""></footer>
-    </div>
+      <Command shouldFilter={false}>
+        <CommandInput
+          placeholder="Type a command or search..."
+          value={searchInput}
+          onChangeCapture={handleSearchChange}
+        />
+        <CommandList>
+          {/* <CommandEmpty>No results found.</CommandEmpty> */}
+          {searchResults?.slice(0, 5).map((artist) => (
+            <CommandItem key={artist.id}>
+              <Image
+                src={artist.images[0].url}
+                alt={artist.name}
+                width={40}
+                height={40}
+              />
+              <p>{artist.name}</p>
+            </CommandItem>
+          ))}
+        </CommandList>
+      </Command>
+    </>
   );
 }
