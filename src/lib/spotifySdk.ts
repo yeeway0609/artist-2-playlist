@@ -1,8 +1,8 @@
 'use client'
 
 import { AccessToken, IAuthStrategy, SdkConfiguration, SdkOptions, SpotifyApi } from '@spotify/web-api-ts-sdk'
-import { AuthUser } from '@/app/api/auth/[...nextauth]/authOptions'
 import { getSession, signIn } from 'next-auth/react'
+import { AuthUser } from '@/app/api/auth/[...nextauth]/authOptions'
 
 /**
  * A class that implements the IAuthStrategy interface and wraps the NextAuth functionality.

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { getServerSession } from 'next-auth'
 import authOptions from '@/app/api/auth/[...nextauth]/authOptions'
 import AuthSessionProvider from '@/components/AuthSessionProvider'
-import { getServerSession } from 'next-auth'
 
 export const metadata: Metadata = {
   title: 'Spotify Artist2Playlist',

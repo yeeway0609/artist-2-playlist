@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession, signOut, signIn } from 'next-auth/react'
 import { Artist } from '@spotify/web-api-ts-sdk'
-import { Button } from '@/components/ui/button'
-import sdk from '@/lib/spotifySdk'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useDebouncedCallback } from 'use-debounce'
-import { Command, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import Image from 'next/image'
+import { useSession, signOut, signIn } from 'next-auth/react'
+import { useDebouncedCallback } from 'use-debounce'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Command, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import sdk from '@/lib/spotifySdk'
 
 export default function Home() {
   const session = useSession()
