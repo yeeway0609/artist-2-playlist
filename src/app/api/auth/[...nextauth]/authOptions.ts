@@ -1,23 +1,23 @@
-import spotifyProfile, { refreshAccessToken } from "./SpotifyProfile";
-import { Account, AuthOptions, Session } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import spotifyProfile, { refreshAccessToken } from './SpotifyProfile'
+import { Account, AuthOptions, Session } from 'next-auth'
+import { JWT } from 'next-auth/jwt'
 
 export interface CustomSession extends Session {
-  user: AuthUser;
-  error?: string;
+  user: AuthUser
+  error?: string
 }
 export type AuthUser = {
-  name: string;
-  email: string;
-  image: string;
-  access_token: string;
-  token_type: string;
-  expires_at: number;
-  expires_in: number;
-  refresh_token: string;
-  scope: string;
-  id: string;
-};
+  name: string
+  email: string
+  image: string
+  access_token: string
+  token_type: string
+  expires_at: number
+  expires_in: number
+  refresh_token: string
+  scope: string
+  id: string
+}
 
 const authOptions: AuthOptions = {
   providers: [spotifyProfile],
@@ -27,7 +27,7 @@ const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, account }: { token: JWT; account: Account | null }) {
       if (!account) {
-        return token;
+        return token
       }
 
       const updatedToken = {
@@ -39,13 +39,13 @@ const authOptions: AuthOptions = {
         refresh_token: account?.refresh_token,
         scope: account?.scope,
         id: account?.providerAccountId,
-      };
-
-      if (Date.now() < updatedToken.expires_at) {
-        return refreshAccessToken(updatedToken);
       }
 
-      return updatedToken;
+      if (Date.now() < updatedToken.expires_at) {
+        return refreshAccessToken(updatedToken)
+      }
+
+      return updatedToken
     },
     async session({ session, token }: { session: any; token: JWT }) {
       const user: AuthUser = {
@@ -57,14 +57,14 @@ const authOptions: AuthOptions = {
         refresh_token: token.refresh_token,
         scope: token.scope,
         id: token.id,
-      };
-      session.user = user;
-      session.error = token.error;
-      return session;
+      }
+      session.user = user
+      session.error = token.error
+      return session
     },
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: process.env.NODE_ENV === 'development',
   secret: process.env.NEXTAUTH_SECRET,
-};
+}
 
-export default authOptions;
+export default authOptions
