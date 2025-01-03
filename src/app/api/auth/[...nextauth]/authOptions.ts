@@ -1,6 +1,6 @@
-import spotifyProfile, { refreshAccessToken } from './SpotifyProfile'
 import { Account, AuthOptions, Session } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
+import spotifyProfile, { refreshAccessToken } from './SpotifyProfile'
 
 export interface CustomSession extends Session {
   user: AuthUser
