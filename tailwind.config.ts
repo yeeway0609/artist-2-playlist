@@ -1,4 +1,6 @@
 import type { Config } from 'tailwindcss'
+import plugin from 'tailwindcss/plugin'
+import tailwindcssAnimatePlugin from 'tailwindcss-animate'
 
 export default {
   darkMode: ['class'],
@@ -58,5 +60,14 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    plugin(function ({ addComponents }) {
+      addComponents({
+        '.text-h2': {
+          '@apply text-primary text-2xl font-semibold': {},
+        },
+      })
+    }),
+    tailwindcssAnimatePlugin,
+  ],
 } satisfies Config
