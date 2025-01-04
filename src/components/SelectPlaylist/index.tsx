@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SimplifiedPlaylist } from '@spotify/web-api-ts-sdk'
 import { Button } from '@/components/ui/button'
-import { Command, CommandItem, CommandList } from '@/components/ui/command'
+import { Command, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import sdk from '@/lib/spotifySdk'
 
@@ -69,7 +69,8 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0">
-        <Command shouldFilter={false}>
+        <Command>
+          <CommandInput placeholder="Search your playlist..." />
           <CommandList>
             {playlists?.map((playlist) => (
               <CommandItem className="cursor-pointer" key={playlist.id} onSelect={() => handleSelectPlaylist(playlist)}>
