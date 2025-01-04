@@ -41,6 +41,7 @@ class NextAuthStrategy implements IAuthStrategy {
 
   public setConfiguration(configuration: SdkConfiguration): void {
     console.warn('[Spotify-SDK][WARN]\nsetConfiguration not implemented')
+    console.warn('configuration:', configuration)
   }
 }
 
