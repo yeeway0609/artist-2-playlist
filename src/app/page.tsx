@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
 import { useSession, signOut, signIn } from 'next-auth/react'
 import SelectArtist from '@/components/SelectArtist'
@@ -11,9 +12,10 @@ import { addTracksToPlaylist, getAlbumsFromArtist, getTracksFromAlbum } from '@/
 
 export default function Home() {
   const session = useSession()
-  const [status, setStatus] = useState<'idle' | 'processing' | 'done'>('idle')
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
   const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
+  const [status, setStatus] = useState<'idle' | 'processing' | 'done'>('idle')
+  const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
 
   async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
     try {
@@ -36,11 +38,14 @@ export default function Home() {
 
   async function handleStartProcess() {
     if (!selectedArtist || !selectedPlaylist) return
+
     setStatus('processing')
+    arrowLottie?.play()
 
     const tracks = await getAllTracksFromArtist(selectedArtist.id)
     await addTracksToPlaylist(selectedPlaylist.id, tracks)
 
+    arrowLottie?.stop()
     setStatus('done')
   }
 
@@ -61,22 +66,31 @@ export default function Home() {
       <p className="my-3 text-3xl">{session.data.user?.name}</p>
       <Button onClick={() => signOut()}>Sign out</Button>
 
-      <section className="mb-6">
+      <section className="">
         <h2 className="text-h2 mb-2">Artist</h2>
         <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
       </section>
+
+      <DotLottieWorkerReact
+        className="my-2 h-20 w-[130px]"
+        dotLottieRefCallback={setArrowLottie}
+        src="https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie"
+        loop
+      />
 
       <section className="mb-6">
         <h2 className="text-h2 mb-2">Your Playlist</h2>
         <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
       </section>
 
-      <Button onClick={handleStartProcess}>start</Button>
-
       <p>
         {status === 'processing' && 'Loading...'}
         {status === 'done' && 'Process completed.'}
       </p>
+
+      <Button disabled={!selectedArtist || !selectedPlaylist} onClick={handleStartProcess}>
+        start
+      </Button>
     </>
   )
 }
