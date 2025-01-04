@@ -54,13 +54,17 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
         >
           {selectedPlaylist ? (
             <>
-              <img
-                className="size-20 rounded object-cover"
-                src={selectedPlaylist.images[0].url}
-                alt={selectedPlaylist.name}
-                width={80}
-                height={80}
-              />
+              {selectedPlaylist.images?.length > 0 ? (
+                <img
+                  className="size-20 rounded object-cover"
+                  src={selectedPlaylist.images[0].url}
+                  alt={selectedPlaylist.name}
+                  width={80}
+                  height={80}
+                />
+              ) : (
+                <div className="flex size-20 items-center justify-center bg-muted text-secondary-foreground">NaN</div>
+              )}
               <span className="line-clamp-2 text-wrap text-left text-xl font-semibold">{selectedPlaylist.name}</span>
             </>
           ) : (
@@ -74,7 +78,7 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
           <CommandList>
             {playlists?.map((playlist) => (
               <CommandItem className="cursor-pointer" key={playlist.id} onSelect={() => handleSelectPlaylist(playlist)}>
-                {playlist.images.length > 0 ? (
+                {playlist.images?.length > 0 ? (
                   <img
                     className="size-10 object-cover"
                     src={playlist.images[0].url}
@@ -83,7 +87,7 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
                     height={40}
                   />
                 ) : (
-                  <div className="flex size-10 items-center justify-center bg-muted">NaN</div>
+                  <div className="flex size-10 items-center justify-center bg-muted text-secondary-foreground">NaN</div>
                 )}
                 <p className="truncate">{playlist.name}</p>
               </CommandItem>

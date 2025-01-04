@@ -21,7 +21,6 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist }: Sele
     if (!input) return
     const results = await sdk.search(input, ['artist'])
     if (!results) return
-    console.log(results.artists)
     setResults(results.artists.items)
   }, 300)
 
@@ -47,13 +46,17 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist }: Sele
         >
           {selectedArtist ? (
             <>
-              <Image
-                className="size-20 rounded object-cover"
-                src={selectedArtist.images[0].url}
-                alt={selectedArtist.name}
-                width={80}
-                height={80}
-              />
+              {selectedArtist.images.length > 0 ? (
+                <Image
+                  className="size-20 rounded object-cover"
+                  src={selectedArtist.images[0].url}
+                  alt={selectedArtist.name}
+                  width={80}
+                  height={80}
+                />
+              ) : (
+                <div className="flex size-20 items-center justify-center bg-muted text-secondary-foreground">NaN</div>
+              )}
               <div className="flex flex-col items-start">
                 <span className="truncate text-xl font-semibold">{selectedArtist.name}</span>
                 <span className="truncate text-secondary-foreground">{selectedArtist.followers.total} followers</span>
@@ -79,7 +82,7 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist }: Sele
                     height={40}
                   />
                 ) : (
-                  <div className="flex size-10 items-center justify-center bg-muted">NaN</div>
+                  <div className="flex size-10 items-center justify-center bg-muted text-secondary-foreground">NaN</div>
                 )}
                 <p className="truncate">{artist.name}</p>
               </CommandItem>
