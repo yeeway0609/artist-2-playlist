@@ -42,7 +42,7 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist }: Sele
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="h-auto w-[300px] justify-start gap-4 p-3"
+          className="h-auto w-full justify-start gap-4 p-3"
         >
           {selectedArtist ? (
             <>

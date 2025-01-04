@@ -11,11 +11,13 @@ import { Button } from '@/components/ui/button'
 import { addTracksToPlaylist, getAlbumsFromArtist, getTracksFromAlbum } from '@/lib/spotifyServices'
 
 export default function App() {
+  // TODO: session 過期要導回登入頁
   const session = useSession()
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
   const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
   const [status, setStatus] = useState<'idle' | 'processing' | 'done'>('idle')
   const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
+  const [progressAlbum, setProgressAlbum] = useState('')
 
   async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
     try {
@@ -24,7 +26,8 @@ export default function App() {
 
       // REFACTOR: Use Promise.all to fetch tracks concurrently
       for (const album of albums) {
-        console.log('Getting tracks from album:', album.name)
+        setProgressAlbum(album.name)
+
         const albumTracks = await getTracksFromAlbum(album.id, id)
         tracks.push(...albumTracks)
       }
@@ -66,31 +69,42 @@ export default function App() {
       <p className="my-3 text-3xl">{session.data.user?.name}</p>
       <Button onClick={() => signOut()}>Sign out</Button>
 
-      <section className="">
-        <h2 className="text-h2 mb-2">Artist</h2>
-        <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
-      </section>
+      <div className="w-full max-w-[300px]">
+        <section className="mt-6">
+          <h2 className="text-h2 mb-2">Artist</h2>
+          <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
+        </section>
 
-      <DotLottieWorkerReact
-        className="my-2 h-20 w-[130px]"
-        dotLottieRefCallback={setArrowLottie}
-        src="https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie"
-        loop
-      />
+        <DotLottieWorkerReact
+          className="mx-auto my-2 h-20 w-[130px]"
+          dotLottieRefCallback={setArrowLottie}
+          src="https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie"
+          loop
+        />
 
-      <section className="mb-6">
-        <h2 className="text-h2 mb-2">Your Playlist</h2>
-        <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
-      </section>
+        <section className="mb-6">
+          <h2 className="text-h2 mb-2">Your Playlist</h2>
+          <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
+        </section>
 
-      <p>
-        {status === 'processing' && 'Loading...'}
-        {status === 'done' && 'Process completed.'}
-      </p>
+        {status !== 'idle' && (
+          <p className="mb-4 h-10 w-full truncate whitespace-pre-wrap text-left text-sm">
+            {status === 'processing' && (
+              <>
+                Adding tracks from &quot;<span className="font-medium">{progressAlbum}</span>&quot;...
+              </>
+            )}
 
-      <Button disabled={!selectedArtist || !selectedPlaylist} onClick={handleStartProcess}>
-        start
-      </Button>
+            {status === 'done' && 'Process completed! 🎉🎉🎉'}
+          </p>
+        )}
+
+        <div className="flex justify-center">
+          <Button className="mx-auto" disabled={!selectedArtist || !selectedPlaylist} onClick={handleStartProcess}>
+            Start
+          </Button>
+        </div>
+      </div>
     </>
   )
 }
