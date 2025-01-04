@@ -1,17 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Artist } from '@spotify/web-api-ts-sdk'
+import { Artist, SimplifiedPlaylist } from '@spotify/web-api-ts-sdk'
 import { useSession, signOut, signIn } from 'next-auth/react'
-import SearchArtist from '@/components/SearchArtist'
+import SelectArtist from '@/components/SelectArtist'
+import SelectPlaylist from '@/components/SelectPlaylist'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 // import sdk from '@/lib/spotifySdk'
 
 export default function Home() {
   const session = useSession()
-
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
+  const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
 
   if (!session || session.status !== 'authenticated') {
     return (
@@ -30,9 +31,14 @@ export default function Home() {
       <p className="my-3 text-3xl">{session.data.user?.name}</p>
       <Button onClick={() => signOut()}>Sign out</Button>
 
-      <section>
+      <section className='mb-6'>
         <h2 className="text-h2 mb-2">Artist</h2>
-        <SearchArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
+        <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
+      </section>
+
+      <section>
+        <h2 className="text-h2 mb-2">Your Playlist</h2>
+        <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
       </section>
     </>
   )

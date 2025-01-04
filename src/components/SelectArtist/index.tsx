@@ -7,12 +7,12 @@ import { Command, CommandInput, CommandItem, CommandList } from '@/components/ui
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import sdk from '@/lib/spotifySdk'
 
-type SearchArtistProps = {
+type SelectArtistProps = {
   selectedArtist: Artist | null
   setSelectedArtist: (artist: Artist) => void
 }
 
-export default function SearchArtist({ selectedArtist, setSelectedArtist }: SearchArtistProps) {
+export default function SelectArtist({ selectedArtist, setSelectedArtist }: SelectArtistProps) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [results, setResults] = useState<Artist[] | null>(null)
@@ -55,12 +55,12 @@ export default function SearchArtist({ selectedArtist, setSelectedArtist }: Sear
                 height={80}
               />
               <div className="flex flex-col items-start">
-                <span className="text-2xl font-semibold">{selectedArtist.name}</span>
-                <span className="text-secondary-foreground">{selectedArtist.followers.total} followers</span>
+                <span className="truncate text-xl font-semibold">{selectedArtist.name}</span>
+                <span className="truncate text-secondary-foreground">{selectedArtist.followers.total} followers</span>
               </div>
             </>
           ) : (
-            <span className="text text-secondary-foreground">Select the artist</span>
+            <span className="text text-secondary-foreground">Select an artist</span>
           )}
         </Button>
       </PopoverTrigger>
@@ -81,7 +81,7 @@ export default function SearchArtist({ selectedArtist, setSelectedArtist }: Sear
                 ) : (
                   <div className="flex size-10 items-center justify-center bg-muted">NaN</div>
                 )}
-                <p>{artist.name}</p>
+                <p className="truncate">{artist.name}</p>
               </CommandItem>
             ))}
           </CommandList>
