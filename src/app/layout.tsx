@@ -3,10 +3,12 @@ import './globals.css'
 import { getServerSession } from 'next-auth'
 import authOptions from '@/app/api/auth/[...nextauth]/authOptions'
 import AuthSessionProvider from '@/components/AuthSessionProvider'
+import { DarkModeToggle } from '@/components/DarkModeToggle'
+import { ThemeProvider } from '@/components/ThemeProvider.tsx'
 
 export const metadata: Metadata = {
-  title: 'Spotify Artist2Playlist',
-  description: 'Add all songs of artist on Spotify to your playlists.',
+  title: 'Artist2Playlist for Spotify',
+  description: 'Add all songs of artist to your playlists on Spotify.',
 }
 
 export default async function RootLayout({
@@ -17,11 +19,14 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions)
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <AuthSessionProvider session={session}>
         <body className="mx-auto min-h-dvh max-w-screen-sm antialiased">
-          <main className="flex flex-col items-center px-4 py-10">{children}</main>
-          <footer className=""></footer>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <DarkModeToggle />
+            <main className="flex flex-col items-center px-4 py-10">{children}</main>
+            <footer className=""></footer>
+          </ThemeProvider>
         </body>
       </AuthSessionProvider>
     </html>
