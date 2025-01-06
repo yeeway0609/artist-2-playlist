@@ -63,7 +63,7 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist }: Sele
               </div>
             </>
           ) : (
-            <span className="text text-secondary-foreground">Select an artist</span>
+            <span className="text my-2 text-secondary-foreground">Select an artist</span>
           )}
         </Button>
       </PopoverTrigger>

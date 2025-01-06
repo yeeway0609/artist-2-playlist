@@ -3,12 +3,16 @@
 import { useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
+import { InfoIcon } from 'lucide-react'
 import { useSession, signOut, signIn } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import SelectArtist from '@/components/SelectArtist'
 import SelectPlaylist from '@/components/SelectPlaylist'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { addTracksToPlaylist, getAlbumsFromArtist, getTracksFromAlbum } from '@/lib/spotifyServices'
 
 export default function App() {
@@ -79,6 +83,28 @@ export default function App() {
         <section className="mt-6">
           <h2 className="text-h2 mb-2">Artist</h2>
           <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
+          <div className="mb-1 mt-2 flex items-center px-1">
+            <h3 className="mb-0.5">Included album types</h3>
+            <InfoIcon className="ml-1 size-4" />
+          </div>
+          <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1 text-sm font-medium leading-none">
+            <Checkbox id="album" />
+            <label htmlFor="album" className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Album
+            </label>
+            <Checkbox id="single" />
+            <label htmlFor="single" className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Single
+            </label>
+            <Checkbox id="appears_on" />
+            <label htmlFor="appears_on" className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Appears_on
+            </label>
+            <Checkbox id="compilation" />
+            <label htmlFor="compilation" className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Compilation
+            </label>
+          </div>
         </section>
 
         <DotLottieWorkerReact
@@ -90,8 +116,29 @@ export default function App() {
 
         <section className="mb-6">
           <h2 className="text-h2 mb-2">Your Playlist</h2>
-          <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
+          <Tabs defaultValue="existing" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="existing">Existing one</TabsTrigger>
+              <TabsTrigger value="create">Create a new one</TabsTrigger>
+            </TabsList>
+            <TabsContent value="existing">
+              <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
+            </TabsContent>
+            <TabsContent value="create">
+              <Input placeholder="Playlist name" />
+            </TabsContent>
+          </Tabs>
         </section>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox id="terms" />
+          <label
+            htmlFor="terms"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Accept terms and conditions
+          </label>
+        </div>
 
         {status !== 'idle' && (
           <p className="mb-4 h-10 w-full truncate whitespace-pre-wrap text-left text-sm">
