@@ -17,6 +17,7 @@ export default function App() {
   const { resolvedTheme } = useTheme()
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
   const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
+  const [addedCount, setAddedCount] = useState(0)
   const [status, setStatus] = useState<'idle' | 'processing' | 'done'>('idle')
   const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
   const [progressAlbum, setProgressAlbum] = useState('')
@@ -34,6 +35,7 @@ export default function App() {
 
         const albumTracks = await getTracksFromAlbum(album.id, id)
         tracks.push(...albumTracks)
+        setAddedCount((prev) => prev + albumTracks.length)
       }
 
       return tracks
@@ -99,12 +101,16 @@ export default function App() {
               </>
             )}
 
-            {status === 'done' && 'Process completed! 🎉🎉🎉'}
+            {status === 'done' && `Process completed! 🎉🎉🎉 Added ${addedCount} tracks.`}
           </p>
         )}
 
         <div className="flex justify-center">
-          <Button className="mx-auto" disabled={!selectedArtist || !selectedPlaylist} onClick={handleStartProcess}>
+          <Button
+            className="mx-auto"
+            disabled={!selectedArtist || !selectedPlaylist || status === 'processing'}
+            onClick={handleStartProcess}
+          >
             Start
           </Button>
         </div>
