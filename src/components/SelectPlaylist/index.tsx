@@ -68,7 +68,7 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
               <span className="line-clamp-2 text-wrap text-left text-xl font-semibold">{selectedPlaylist.name}</span>
             </>
           ) : (
-            <span className="text my-2 text-secondary-foreground">Select a playlist</span>
+            <span className="text my-2 text-secondary-foreground">Select a playlist...</span>
           )}
         </Button>
       </PopoverTrigger>

@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
-import { Artist, SimplifiedPlaylist, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
+import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
 import { InfoIcon } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
@@ -48,6 +48,7 @@ export default function App() {
     AlbumType.AppearsOn,
     AlbumType.Compilation,
   ])
+  const [isRemoveDuplicatesEnabled, setIsRemoveDuplicatesEnabled] = useState(false)
 
   function handleCheckboxChange(value: AlbumType) {
     if (includedAlbumTypes.length === 1 && includedAlbumTypes.includes(value)) return
@@ -62,12 +63,12 @@ export default function App() {
   async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
     try {
       const tracks: SimplifiedTrack[] = []
-
       const albums = await getAlbumsFromArtist(id, includedAlbumTypes.join(','))
+      const sortedAlbums = sortAlbumsByReleaseDate(albums)
       const BATCH_SIZE = 4
 
-      for (let i = 0; i < albums.length; i += BATCH_SIZE) {
-        const albumBatch = albums.slice(i, i + BATCH_SIZE)
+      for (let i = 0; i < sortedAlbums.length; i += BATCH_SIZE) {
+        const albumBatch = sortedAlbums.slice(i, i + BATCH_SIZE)
 
         await Promise.all(
           albumBatch.map(async (album) => {
@@ -87,7 +88,22 @@ export default function App() {
     }
   }
 
-  // function removeDuplicateTracks(tracks: SimplifiedTrack[]): SimplifiedTrack[] {}
+  function removeDuplicateTracks(tracks: SimplifiedTrack[]): SimplifiedTrack[] {
+    return tracks.filter((track, index, self) => self.findIndex((t) => t.name === track.name) === index)
+  }
+
+  function sortAlbumsByReleaseDate(albums: SimplifiedAlbum[], order: 'asc' | 'desc' = 'desc'): SimplifiedAlbum[] {
+    return albums.sort((a, b) => {
+      const dateA = new Date(a.release_date).getTime()
+      const dateB = new Date(b.release_date).getTime()
+
+      if (order === 'asc') {
+        return dateA - dateB
+      } else {
+        return dateB - dateA
+      }
+    })
+  }
 
   async function handleStartProcess() {
     if (!selectedArtist || !selectedPlaylist) return
@@ -96,7 +112,12 @@ export default function App() {
     setStatus('processing')
     arrowLottie?.play()
 
-    const tracks = await getAllTracksFromArtist(selectedArtist.id)
+    let tracks = await getAllTracksFromArtist(selectedArtist.id)
+
+    if (isRemoveDuplicatesEnabled) {
+      tracks = removeDuplicateTracks(tracks)
+    }
+
     await addTracksToPlaylist(selectedPlaylist.id, tracks)
 
     arrowLottie?.stop()
@@ -156,17 +177,16 @@ export default function App() {
               <Input placeholder="Playlist name" />
             </TabsContent>
           </Tabs>
-        </section>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox id="remove-duplicate" />
-          <label
-            htmlFor="remove-duplicate"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Remove duplicate song titles
-          </label>
-        </div>
+          <div className="mt-3 flex items-center space-x-2 px-1 text-sm font-medium leading-none">
+            <Checkbox
+              id="remove-duplicate"
+              checked={isRemoveDuplicatesEnabled}
+              onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
+            />
+            <label htmlFor="remove-duplicate">Remove duplicate song titles</label>
+          </div>
+        </section>
 
         {status !== 'idle' && (
           <p className="mb-4 h-10 w-full truncate whitespace-pre-wrap text-left text-sm">
