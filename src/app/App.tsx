@@ -36,13 +36,12 @@ const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0
 export default function App() {
   const session = useSession()
   const { resolvedTheme } = useTheme()
+  const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
   const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
-  const [addedCount, setAddedCount] = useState(0)
   const [status, setStatus] = useState<'idle' | 'processing' | 'done'>('idle')
-  const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
-  const [progressAlbum, setProgressAlbum] = useState('')
-
+  const [processingAlbum, setProcessingAlbum] = useState('')
+  const [addedTracksCount, setAddedTracksCount] = useState(0)
   const [includedAlbumTypes, setIncludedAlbumTypes] = useState<AlbumType[]>([
     AlbumType.Album,
     AlbumType.Single,
@@ -72,10 +71,10 @@ export default function App() {
 
         await Promise.all(
           albumBatch.map(async (album) => {
-            setProgressAlbum(album.name)
+            setProcessingAlbum(album.name)
             const albumTracks = await getTracksFromAlbum(album.id, id)
             tracks.push(...albumTracks)
-            setAddedCount((prev) => prev + albumTracks.length)
+            setAddedTracksCount((prev) => prev + albumTracks.length)
             return albumTracks
           })
         )
@@ -93,7 +92,7 @@ export default function App() {
   async function handleStartProcess() {
     if (!selectedArtist || !selectedPlaylist) return
 
-    setAddedCount(0)
+    setAddedTracksCount(0)
     setStatus('processing')
     arrowLottie?.play()
 
@@ -173,11 +172,11 @@ export default function App() {
           <p className="mb-4 h-10 w-full truncate whitespace-pre-wrap text-left text-sm">
             {status === 'processing' && (
               <>
-                Adding tracks from &quot;<span className="font-medium">{progressAlbum}</span>&quot;...
+                Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
               </>
             )}
 
-            {status === 'done' && `Process completed! 🎉🎉🎉 Added ${addedCount} tracks.`}
+            {status === 'done' && `Process completed! 🎉🎉🎉 Added ${addedTracksCount} tracks.`}
           </p>
         )}
 
