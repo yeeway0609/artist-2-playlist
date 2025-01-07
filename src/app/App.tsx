@@ -31,14 +31,20 @@ export default function App() {
     try {
       const tracks: SimplifiedTrack[] = []
       const albums = await getAlbumsFromArtist(id)
+      const BATCH_SIZE = 4
 
-      // REFACTOR: Use Promise.all to fetch tracks concurrently
-      for (const album of albums) {
-        setProgressAlbum(album.name)
+      for (let i = 0; i < albums.length; i += BATCH_SIZE) {
+        const albumBatch = albums.slice(i, i + BATCH_SIZE)
 
-        const albumTracks = await getTracksFromAlbum(album.id, id)
-        tracks.push(...albumTracks)
-        setAddedCount((prev) => prev + albumTracks.length)
+        await Promise.all(
+          albumBatch.map(async (album) => {
+            setProgressAlbum(album.name)
+            const albumTracks = await getTracksFromAlbum(album.id, id)
+            tracks.push(...albumTracks)
+            setAddedCount((prev) => prev + albumTracks.length)
+            return albumTracks
+          })
+        )
       }
 
       return tracks
@@ -51,6 +57,7 @@ export default function App() {
   async function handleStartProcess() {
     if (!selectedArtist || !selectedPlaylist) return
 
+    setAddedCount(0)
     setStatus('processing')
     arrowLottie?.play()
 
