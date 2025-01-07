@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
 import { InfoIcon } from 'lucide-react'
@@ -15,6 +15,24 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { addTracksToPlaylist, getAlbumsFromArtist, getTracksFromAlbum } from '@/lib/spotifyServices'
 
+enum AlbumType {
+  Album = 'album',
+  Single = 'single',
+  AppearsOn = 'appears_on',
+  Compilation = 'compilation',
+}
+
+const albumTypeLabels = {
+  [AlbumType.Album]: 'Album',
+  [AlbumType.Single]: 'Single',
+  [AlbumType.AppearsOn]: 'Appears On',
+  [AlbumType.Compilation]: 'Compilation',
+}
+
+// TODO: 這兩個有時候切換不過來
+const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
+const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
+
 export default function App() {
   const session = useSession()
   const { resolvedTheme } = useTheme()
@@ -24,13 +42,29 @@ export default function App() {
   const [status, setStatus] = useState<'idle' | 'processing' | 'done'>('idle')
   const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
   const [progressAlbum, setProgressAlbum] = useState('')
-  const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
-  const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
+
+  const [includedAlbumTypes, setIncludedAlbumTypes] = useState<AlbumType[]>([
+    AlbumType.Album,
+    AlbumType.Single,
+    AlbumType.AppearsOn,
+    AlbumType.Compilation,
+  ])
+
+  function handleCheckboxChange(value: AlbumType) {
+    if (includedAlbumTypes.length === 1 && includedAlbumTypes.includes(value)) return
+
+    if (includedAlbumTypes.includes(value)) {
+      setIncludedAlbumTypes(includedAlbumTypes.filter((type) => type !== value))
+    } else {
+      setIncludedAlbumTypes([...includedAlbumTypes, value])
+    }
+  }
 
   async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
     try {
       const tracks: SimplifiedTrack[] = []
-      const albums = await getAlbumsFromArtist(id)
+
+      const albums = await getAlbumsFromArtist(id, includedAlbumTypes.join(','))
       const BATCH_SIZE = 4
 
       for (let i = 0; i < albums.length; i += BATCH_SIZE) {
@@ -53,6 +87,8 @@ export default function App() {
       return []
     }
   }
+
+  // function removeDuplicateTracks(tracks: SimplifiedTrack[]): SimplifiedTrack[] {}
 
   async function handleStartProcess() {
     if (!selectedArtist || !selectedPlaylist) return
@@ -81,32 +117,27 @@ export default function App() {
         <section className="mt-6">
           <h2 className="text-h2 mb-2">Artist</h2>
           <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
+
           <div className="mb-1 mt-2 flex items-center px-1">
             <h3 className="mb-0.5">Included album types</h3>
             <InfoIcon className="ml-1 size-4" />
           </div>
           <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1 text-sm font-medium leading-none">
-            <Checkbox id="album" />
-            <label htmlFor="album" className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Album
-            </label>
-            <Checkbox id="single" />
-            <label htmlFor="single" className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Single
-            </label>
-            <Checkbox id="appears_on" />
-            <label htmlFor="appears_on" className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Appears_on
-            </label>
-            <Checkbox id="compilation" />
-            <label htmlFor="compilation" className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Compilation
-            </label>
+            {Object.values(AlbumType).map((type) => (
+              <Fragment key={type}>
+                <Checkbox
+                  id={type}
+                  checked={includedAlbumTypes.includes(type)}
+                  onCheckedChange={() => handleCheckboxChange(type)}
+                />
+                <label htmlFor={type}>{albumTypeLabels[type]}</label>
+              </Fragment>
+            ))}
           </div>
         </section>
 
         <DotLottieWorkerReact
-          className="mx-auto my-2 h-20 w-[130px]"
+          className="mx-auto mb-2 mt-3 h-20 w-[130px]"
           dotLottieRefCallback={setArrowLottie}
           src={resolvedTheme === 'dark' ? LOTTIE_URL_WHITE : LOTTIE_URL_BLACK}
           loop
@@ -129,12 +160,12 @@ export default function App() {
         </section>
 
         <div className="flex items-center space-x-2">
-          <Checkbox id="terms" />
+          <Checkbox id="remove-duplicate" />
           <label
-            htmlFor="terms"
+            htmlFor="remove-duplicate"
             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
-            Accept terms and conditions
+            Remove duplicate song titles
           </label>
         </div>
 

@@ -3,11 +3,12 @@
 import { SimplifiedAlbum, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
 import sdk from '@/lib/spotifySdk'
 
-export async function getAlbumsFromArtist(id: string): Promise<SimplifiedAlbum[]> {
+export async function getAlbumsFromArtist(
+  id: string,
+  includeGroups: string = 'album,single,appears_on,compilation'
+): Promise<SimplifiedAlbum[]> {
   try {
     const albums: SimplifiedAlbum[] = []
-    // TODO: 這邊要改為可選項
-    const includeGroups = 'album,single,appears_on,compilation'
     let offset = 0
     let hasNext = true
 
