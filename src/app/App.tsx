@@ -211,6 +211,7 @@ export default function App() {
             </TabsContent>
             <TabsContent value="create">
               <Input
+                className="h-[62px]"
                 placeholder="Playlist name"
                 value={newPlaylistName || ''}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
@@ -224,7 +225,7 @@ export default function App() {
               checked={isRemoveDuplicatesEnabled}
               onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
             />
-            <label htmlFor="remove-duplicate">Remove duplicate song titles</label>
+            <label htmlFor="remove-duplicate">Remove songs with duplicate titles</label>
           </div>
         </section>
 
