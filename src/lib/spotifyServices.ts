@@ -1,6 +1,6 @@
 // REFERENCE: https://developer.spotify.com/documentation/web-api
 
-import { SimplifiedAlbum, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
+import { SimplifiedAlbum, SimplifiedPlaylist, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
 import sdk from '@/lib/spotifySdk'
 
 export async function getCurrentUser() {
@@ -10,6 +10,29 @@ export async function getCurrentUser() {
   } catch (error) {
     console.error('Error getting current user:', error)
     return null
+  }
+}
+
+export async function getCurrentUserPlaylists() {
+  try {
+    const playlists: SimplifiedPlaylist[] = []
+    let offset = 0
+    let hasNext = true
+
+    while (hasNext) {
+      const response = await sdk.currentUser.playlists.playlists(50, offset)
+      if (!response) break
+
+      playlists.push(...response.items)
+
+      hasNext = !!response.next
+      offset += 50
+    }
+
+    return playlists
+  } catch (error) {
+    console.error('Error getting current user playlists:', error)
+    return []
   }
 }
 

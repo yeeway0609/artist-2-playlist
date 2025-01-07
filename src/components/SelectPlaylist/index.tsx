@@ -3,7 +3,7 @@ import { SimplifiedPlaylist } from '@spotify/web-api-ts-sdk'
 import { Button } from '@/components/ui/button'
 import { Command, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import sdk from '@/lib/spotifySdk'
+import { getCurrentUserPlaylists } from '@/lib/spotifyServices'
 
 type SelectArtistProps = {
   selectedPlaylist: SimplifiedPlaylist | null
@@ -16,23 +16,9 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
 
   useEffect(() => {
     async function fetchPlaylists() {
-      try {
-        let offset = 0
-        let hasNext = true
-
-        while (hasNext) {
-          const response = await sdk.currentUser.playlists.playlists(50, offset)
-          if (!response) break
-
-          setPlaylists((prev) => (prev ? [...prev, ...response.items] : response.items))
-
-          hasNext = !!response.next
-          offset += 50
-        }
-      } catch (error) {
-        // TODO: handle error
-        console.error('載入播放清單時出錯：', error)
-      }
+      setPlaylists([])
+      const playlists = await getCurrentUserPlaylists()
+      setPlaylists(playlists)
     }
 
     fetchPlaylists()
@@ -76,8 +62,8 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
         <Command>
           <CommandInput placeholder="Search your playlist..." />
           <CommandList>
-            {playlists?.map((playlist) => (
-              <CommandItem className="cursor-pointer" key={playlist.id} onSelect={() => handleSelectPlaylist(playlist)}>
+            {playlists?.map((playlist, index) => (
+              <CommandItem className="cursor-pointer" key={index} onSelect={() => handleSelectPlaylist(playlist)}>
                 {playlist.images?.length > 0 ? (
                   <img
                     className="size-10 object-cover"
