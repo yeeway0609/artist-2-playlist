@@ -3,6 +3,16 @@
 import { SimplifiedAlbum, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
 import sdk from '@/lib/spotifySdk'
 
+export async function getCurrentUser() {
+  try {
+    const response = await sdk.currentUser.profile()
+    return response
+  } catch (error) {
+    console.error('Error getting current user:', error)
+    return null
+  }
+}
+
 export async function getAlbumsFromArtist(
   id: string,
   includeGroups: string = 'album,single,appears_on,compilation'
@@ -68,5 +78,15 @@ export async function addTracksToPlaylist(playlistId: string, tracks: Simplified
     }
   } catch (error) {
     console.error('Error adding tracks to playlist:', error)
+  }
+}
+
+export async function createPlaylist(userId: string, name: string) {
+  try {
+    const response = await sdk.playlists.createPlaylist(userId, { name })
+    return response
+  } catch (error) {
+    console.error('Error creating playlist:', error)
+    return null
   }
 }

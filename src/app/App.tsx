@@ -13,7 +13,13 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { addTracksToPlaylist, getAlbumsFromArtist, getTracksFromAlbum } from '@/lib/spotifyServices'
+import {
+  addTracksToPlaylist,
+  createPlaylist,
+  getAlbumsFromArtist,
+  getCurrentUser,
+  getTracksFromAlbum,
+} from '@/lib/spotifyServices'
 
 enum AlbumType {
   Album = 'album',
@@ -48,9 +54,16 @@ export default function App() {
     AlbumType.AppearsOn,
     AlbumType.Compilation,
   ])
+  const [playlistActionType, setPlaylistActionType] = useState<'existing' | 'create'>('existing')
+  const [newPlaylistName, setNewPlaylistName] = useState('')
   const [isRemoveDuplicatesEnabled, setIsRemoveDuplicatesEnabled] = useState(false)
+  const isButtonDisabled =
+    status === 'processing' ||
+    !selectedArtist ||
+    (playlistActionType === 'existing' && !selectedPlaylist) ||
+    (playlistActionType === 'create' && newPlaylistName.trim() === '')
 
-  function handleCheckboxChange(value: AlbumType) {
+  function handleAlbumTypesChange(value: AlbumType) {
     if (includedAlbumTypes.length === 1 && includedAlbumTypes.includes(value)) return
 
     if (includedAlbumTypes.includes(value)) {
@@ -105,8 +118,8 @@ export default function App() {
     })
   }
 
-  async function handleStartProcess() {
-    if (!selectedArtist || !selectedPlaylist) return
+  async function startWithExistingPlaylist() {
+    if (!selectedArtist || !selectedPlaylist || playlistActionType !== 'existing') return
 
     setAddedTracksCount(0)
     setStatus('processing')
@@ -114,11 +127,30 @@ export default function App() {
 
     let tracks = await getAllTracksFromArtist(selectedArtist.id)
 
-    if (isRemoveDuplicatesEnabled) {
-      tracks = removeDuplicateTracks(tracks)
-    }
+    if (isRemoveDuplicatesEnabled) tracks = removeDuplicateTracks(tracks)
 
     await addTracksToPlaylist(selectedPlaylist.id, tracks)
+
+    arrowLottie?.stop()
+    setStatus('done')
+  }
+
+  async function startWithNewPlaylist() {
+    if (!selectedArtist || newPlaylistName.trim() === '' || playlistActionType !== 'create') return
+
+    setAddedTracksCount(0)
+    setStatus('processing')
+    arrowLottie?.play()
+
+    let tracks = await getAllTracksFromArtist(selectedArtist.id)
+
+    if (isRemoveDuplicatesEnabled) tracks = removeDuplicateTracks(tracks)
+
+    const user = await getCurrentUser()
+    if (!user) return
+    const newPlaylist = await createPlaylist(user.id, newPlaylistName)
+    if (!newPlaylist) return
+    await addTracksToPlaylist(newPlaylist.id, tracks)
 
     arrowLottie?.stop()
     setStatus('done')
@@ -148,7 +180,7 @@ export default function App() {
                 <Checkbox
                   id={type}
                   checked={includedAlbumTypes.includes(type)}
-                  onCheckedChange={() => handleCheckboxChange(type)}
+                  onCheckedChange={() => handleAlbumTypesChange(type)}
                 />
                 <label htmlFor={type}>{albumTypeLabels[type]}</label>
               </Fragment>
@@ -167,14 +199,22 @@ export default function App() {
           <h2 className="text-h2 mb-2">Your Playlist</h2>
           <Tabs defaultValue="existing" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="existing">Existing one</TabsTrigger>
-              <TabsTrigger value="create">Create a new one</TabsTrigger>
+              <TabsTrigger value="existing" onClick={() => setPlaylistActionType('existing')}>
+                Existing one
+              </TabsTrigger>
+              <TabsTrigger value="create" onClick={() => setPlaylistActionType('create')}>
+                Create a new one
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="existing">
               <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
             </TabsContent>
             <TabsContent value="create">
-              <Input placeholder="Playlist name" />
+              <Input
+                placeholder="Playlist name"
+                value={newPlaylistName || ''}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+              />
             </TabsContent>
           </Tabs>
 
@@ -188,23 +228,21 @@ export default function App() {
           </div>
         </section>
 
-        {status !== 'idle' && (
-          <p className="mb-4 h-10 w-full truncate whitespace-pre-wrap text-left text-sm">
-            {status === 'processing' && (
-              <>
-                Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
-              </>
-            )}
-
-            {status === 'done' && `Process completed! 🎉🎉🎉 Added ${addedTracksCount} tracks.`}
+        {status === 'processing' && (
+          <p className="h-10 truncate text-sm">
+            Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
           </p>
         )}
 
-        <div className="flex justify-center">
+        {status === 'done' && (
+          <p className="h-10 text-sm">Process completed! 🎉🎉🎉 Added {addedTracksCount} tracks.</p>
+        )}
+
+        <div className="mt-4 flex justify-center">
           <Button
             className="mx-auto"
-            disabled={!selectedArtist || !selectedPlaylist || status === 'processing'}
-            onClick={handleStartProcess}
+            disabled={isButtonDisabled}
+            onClick={playlistActionType === 'existing' ? startWithExistingPlaylist : startWithNewPlaylist}
           >
             Start
           </Button>
