@@ -4,11 +4,9 @@ import { Fragment, useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
 import { InfoIcon } from 'lucide-react'
-import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import SelectArtist from '@/components/SelectArtist'
 import SelectPlaylist from '@/components/SelectPlaylist'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -40,7 +38,6 @@ const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b
 const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
 
 export default function App() {
-  const session = useSession()
   const { resolvedTheme } = useTheme()
   const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
@@ -62,6 +59,8 @@ export default function App() {
     !selectedArtist ||
     (playlistActionType === 'existing' && !selectedPlaylist) ||
     (playlistActionType === 'create' && newPlaylistName.trim() === '')
+
+  const [albumOrder, setAlbumOrder] = useState<'asc' | 'desc'>('desc')
 
   function handleAlbumTypesChange(value: AlbumType) {
     if (includedAlbumTypes.length === 1 && includedAlbumTypes.includes(value)) return
@@ -157,98 +156,87 @@ export default function App() {
   }
 
   return (
-    <>
-      <Avatar className="size-20">
-        <AvatarImage src={session.data?.user?.image ?? undefined} />
-        <AvatarFallback>Avatar</AvatarFallback>
-      </Avatar>
-      <p className="my-3 text-3xl">{session.data?.user?.name}</p>
-      <Button onClick={() => signOut()}>Sign out</Button>
+    <div className="w-full max-w-[300px] pb-36 pt-10">
+      <section>
+        <h2 className="text-h2 mb-2">Artist</h2>
+        <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
 
-      <div className="w-full max-w-[300px]">
-        <section className="mt-6">
-          <h2 className="text-h2 mb-2">Artist</h2>
-          <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
-
-          <div className="mb-1 mt-2 flex items-center px-1">
-            <h3 className="mb-0.5">Included album types</h3>
-            <InfoIcon className="ml-1 size-4" />
-          </div>
-          <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1 text-sm font-medium leading-none">
-            {Object.values(AlbumType).map((type) => (
-              <Fragment key={type}>
-                <Checkbox
-                  id={type}
-                  checked={includedAlbumTypes.includes(type)}
-                  onCheckedChange={() => handleAlbumTypesChange(type)}
-                />
-                <label htmlFor={type}>{albumTypeLabels[type]}</label>
-              </Fragment>
-            ))}
-          </div>
-        </section>
-
-        <DotLottieWorkerReact
-          className="mx-auto mb-2 mt-3 h-20 w-[130px]"
-          dotLottieRefCallback={setArrowLottie}
-          src={resolvedTheme === 'dark' ? LOTTIE_URL_WHITE : LOTTIE_URL_BLACK}
-          loop
-        />
-
-        <section className="mb-6">
-          <h2 className="text-h2 mb-2">Your Playlist</h2>
-          <Tabs defaultValue="existing" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="existing" onClick={() => setPlaylistActionType('existing')}>
-                Existing one
-              </TabsTrigger>
-              <TabsTrigger value="create" onClick={() => setPlaylistActionType('create')}>
-                Create a new one
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="existing">
-              <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
-            </TabsContent>
-            <TabsContent value="create">
-              <Input
-                className="h-[62px]"
-                placeholder="Playlist name"
-                value={newPlaylistName || ''}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-              />
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-3 flex items-center space-x-2 px-1 text-sm font-medium leading-none">
-            <Checkbox
-              id="remove-duplicate"
-              checked={isRemoveDuplicatesEnabled}
-              onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
-            />
-            <label htmlFor="remove-duplicate">Remove songs with duplicate titles</label>
-          </div>
-        </section>
-
-        {status === 'processing' && (
-          <p className="h-10 truncate text-sm">
-            Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
-          </p>
-        )}
-
-        {status === 'done' && (
-          <p className="h-10 text-sm">Process completed! 🎉🎉🎉 Added {addedTracksCount} tracks.</p>
-        )}
-
-        <div className="mt-4 flex justify-center">
-          <Button
-            className="mx-auto"
-            disabled={isButtonDisabled}
-            onClick={playlistActionType === 'existing' ? startWithExistingPlaylist : startWithNewPlaylist}
-          >
-            Start
-          </Button>
+        <div className="mb-1 mt-2 flex items-center px-1">
+          <h3 className="mb-0.5">Included album types</h3>
+          <InfoIcon className="ml-1 size-4" />
         </div>
+        <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1 text-sm font-medium leading-none">
+          {Object.values(AlbumType).map((type) => (
+            <Fragment key={type}>
+              <Checkbox
+                id={type}
+                checked={includedAlbumTypes.includes(type)}
+                onCheckedChange={() => handleAlbumTypesChange(type)}
+              />
+              <label htmlFor={type}>{albumTypeLabels[type]}</label>
+            </Fragment>
+          ))}
+        </div>
+      </section>
+
+      <DotLottieWorkerReact
+        className="mx-auto mb-2 mt-3 h-20 w-[130px]"
+        dotLottieRefCallback={setArrowLottie}
+        src={resolvedTheme === 'dark' ? LOTTIE_URL_WHITE : LOTTIE_URL_BLACK}
+        loop
+      />
+
+      <section className="mb-6">
+        <h2 className="text-h2 mb-2">Your Playlist</h2>
+        <Tabs defaultValue="existing" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="existing" onClick={() => setPlaylistActionType('existing')}>
+              Existing one
+            </TabsTrigger>
+            <TabsTrigger value="create" onClick={() => setPlaylistActionType('create')}>
+              Create a new one
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="existing">
+            <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
+          </TabsContent>
+          <TabsContent value="create">
+            <Input
+              className="h-[62px] text-sm"
+              placeholder="Enter playlist name..."
+              value={newPlaylistName || ''}
+              onChange={(e) => setNewPlaylistName(e.target.value)}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <div className="mt-3 flex items-center space-x-2 px-1 text-sm font-medium leading-none">
+          <Checkbox
+            id="remove-duplicate"
+            checked={isRemoveDuplicatesEnabled}
+            onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
+          />
+          <label htmlFor="remove-duplicate">Remove songs with duplicate titles</label>
+        </div>
+      </section>
+
+      {status === 'processing' && (
+        <p className="h-10 truncate text-sm">
+          Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
+        </p>
+      )}
+
+      {status === 'done' && <p className="h-10 text-sm">Process completed! 🎉🎉🎉 Added {addedTracksCount} tracks.</p>}
+
+      <div className="mt-4 flex justify-center">
+        <Button
+          className="mx-auto"
+          disabled={isButtonDisabled}
+          onClick={playlistActionType === 'existing' ? startWithExistingPlaylist : startWithNewPlaylist}
+        >
+          Start
+        </Button>
       </div>
-    </>
+    </div>
   )
 }
