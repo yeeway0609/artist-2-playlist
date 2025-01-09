@@ -11,7 +11,11 @@ function AuthSessionProvider({
   children: React.ReactNode
   session: Session | null | undefined
 }) {
-  return <SessionProvider session={session}>{children}</SessionProvider>
+  return (
+    <SessionProvider session={session} refetchInterval={15 * 60}>
+      {children}
+    </SessionProvider>
+  )
 }
 
 export default AuthSessionProvider
