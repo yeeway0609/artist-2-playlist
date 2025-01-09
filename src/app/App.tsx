@@ -28,7 +28,6 @@ const albumTypeLabels = {
   [AlbumType.Compilation]: 'Compilation',
 }
 
-// TODO: 這兩個有時候切換不過來
 const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
 const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
 
