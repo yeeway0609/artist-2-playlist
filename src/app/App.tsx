@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AlbumOrder, AlbumType, AppStatus } from '@/lib/enums'
 import {
   addTracksToPlaylist,
   createPlaylist,
@@ -19,18 +20,6 @@ import {
   getCurrentUser,
   getTracksFromAlbum,
 } from '@/lib/spotifyServices'
-
-enum AlbumType {
-  Album = 'album',
-  Single = 'single',
-  AppearsOn = 'appears_on',
-  Compilation = 'compilation',
-}
-
-enum AlbumOrder {
-  Asc = 'asc',
-  Desc = 'desc',
-}
 
 const albumTypeLabels = {
   [AlbumType.Album]: 'Album',
@@ -47,10 +36,6 @@ export default function App() {
   const { resolvedTheme } = useTheme()
   const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
-  const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
-  const [status, setStatus] = useState<'idle' | 'processing' | 'done'>('idle')
-  const [processingAlbum, setProcessingAlbum] = useState('')
-  const [addedTracksCount, setAddedTracksCount] = useState(0)
   const [includedAlbumTypes, setIncludedAlbumTypes] = useState<AlbumType[]>([
     AlbumType.Album,
     AlbumType.Single,
@@ -58,25 +43,18 @@ export default function App() {
     AlbumType.Compilation,
   ])
   const [playlistActionType, setPlaylistActionType] = useState<'existing' | 'create'>('existing')
+  const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
   const [newPlaylistName, setNewPlaylistName] = useState('')
+  const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
   const [isRemoveDuplicatesEnabled, setIsRemoveDuplicatesEnabled] = useState(false)
+  const [status, setStatus] = useState<AppStatus>(AppStatus.Idle)
+  const [processingAlbum, setProcessingAlbum] = useState('')
+  const [addedTracksCount, setAddedTracksCount] = useState(0)
   const isButtonDisabled =
-    status === 'processing' ||
     !selectedArtist ||
     (playlistActionType === 'existing' && !selectedPlaylist) ||
-    (playlistActionType === 'create' && newPlaylistName.trim() === '')
-
-  const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
-
-  function handleAlbumTypesChange(value: AlbumType) {
-    if (includedAlbumTypes.length === 1 && includedAlbumTypes.includes(value)) return
-
-    if (includedAlbumTypes.includes(value)) {
-      setIncludedAlbumTypes(includedAlbumTypes.filter((type) => type !== value))
-    } else {
-      setIncludedAlbumTypes([...includedAlbumTypes, value])
-    }
-  }
+    (playlistActionType === 'create' && newPlaylistName.trim() === '') ||
+    status === AppStatus.Processing
 
   async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
     try {
@@ -106,8 +84,14 @@ export default function App() {
     }
   }
 
-  function removeDuplicateTracks(tracks: SimplifiedTrack[]): SimplifiedTrack[] {
-    return tracks.filter((track, index, self) => self.findIndex((t) => t.name === track.name) === index)
+  function handleAlbumTypesChange(value: AlbumType) {
+    if (includedAlbumTypes.length === 1 && includedAlbumTypes.includes(value)) return
+
+    if (includedAlbumTypes.includes(value)) {
+      setIncludedAlbumTypes(includedAlbumTypes.filter((type) => type !== value))
+    } else {
+      setIncludedAlbumTypes([...includedAlbumTypes, value])
+    }
   }
 
   function sortAlbumsByReleaseDate(albums: SimplifiedAlbum[], order: AlbumOrder): SimplifiedAlbum[] {
@@ -115,7 +99,7 @@ export default function App() {
       const dateA = new Date(a.release_date).getTime()
       const dateB = new Date(b.release_date).getTime()
 
-      if (order === 'asc') {
+      if (order === AlbumOrder.Asc) {
         return dateA - dateB
       } else {
         return dateB - dateA
@@ -123,11 +107,15 @@ export default function App() {
     })
   }
 
+  function removeDuplicateTracks(tracks: SimplifiedTrack[]): SimplifiedTrack[] {
+    return tracks.filter((track, index, self) => self.findIndex((t) => t.name === track.name) === index)
+  }
+
   async function startWithExistingPlaylist() {
     if (!selectedArtist || !selectedPlaylist || playlistActionType !== 'existing') return
 
     setAddedTracksCount(0)
-    setStatus('processing')
+    setStatus(AppStatus.Processing)
     arrowLottie?.play()
 
     let tracks = await getAllTracksFromArtist(selectedArtist.id)
@@ -137,14 +125,14 @@ export default function App() {
     await addTracksToPlaylist(selectedPlaylist.id, tracks)
 
     arrowLottie?.stop()
-    setStatus('done')
+    setStatus(AppStatus.Done)
   }
 
   async function startWithNewPlaylist() {
     if (!selectedArtist || newPlaylistName.trim() === '' || playlistActionType !== 'create') return
 
     setAddedTracksCount(0)
-    setStatus('processing')
+    setStatus(AppStatus.Processing)
     arrowLottie?.play()
 
     let tracks = await getAllTracksFromArtist(selectedArtist.id)
@@ -158,7 +146,7 @@ export default function App() {
     await addTracksToPlaylist(newPlaylist.id, tracks)
 
     arrowLottie?.stop()
-    setStatus('done')
+    setStatus(AppStatus.Done)
   }
 
   return (
