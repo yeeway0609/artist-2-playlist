@@ -12,6 +12,7 @@ export default function Home() {
     return (
       <div>
         <Button onClick={() => signIn('spotify')}>Sign in with Spotify</Button>
+        <p>we only use essential data refer to our privacy policy</p>
       </div>
     )
   }

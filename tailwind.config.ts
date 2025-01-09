@@ -64,7 +64,10 @@ export default {
     plugin(function ({ addComponents }) {
       addComponents({
         '.text-h2': {
-          '@apply text-primary text-2xl font-semibold': {},
+          '@apply text-primary text-xl font-semibold': {},
+        },
+        '.text-link': {
+          '@apply underline underline-offset-2 break-all': {},
         },
       })
     }),

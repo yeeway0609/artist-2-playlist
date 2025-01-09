@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import authOptions from '@/app/api/auth/[...nextauth]/authOptions'
 import AuthSessionProvider from '@/components/AuthSessionProvider'
-import { DarkModeToggle } from '@/components/DarkModeToggle'
+import Header from '@/components/Header'
 import { ThemeProvider } from '@/components/ThemeProvider.tsx'
 
 export const metadata: Metadata = {
@@ -23,9 +24,21 @@ export default async function RootLayout({
       <AuthSessionProvider session={session}>
         <body className="mx-auto min-h-dvh max-w-screen-sm antialiased">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <DarkModeToggle />
-            <main className="flex flex-col items-center px-4 py-10">{children}</main>
-            <footer className=""></footer>
+            <Header />
+            <main className="flex flex-col items-center px-5">{children}</main>
+            <footer className="flex flex-col space-y-1 border-t border-border px-6 py-8">
+              <Link href="/privacy-policy">Privacy policy</Link>
+              <Link href="/term-of-use">Terms of use</Link>
+              <Link href="https://github.com/yeeway0609/spotify-artist-to-playlist" target="_blank">
+                GitHub
+                <span className="ml-1 text-sm text-primary">&#8599;</span>
+              </Link>
+              <Link href="" target="_blank">
+                Report a issue
+                <span className="ml-1 text-sm text-primary">&#8599;</span>
+              </Link>
+              <p className="pt-1 text-center text-sm text-primary">Copyright © 2025 yeeway</p>
+            </footer>
           </ThemeProvider>
         </body>
       </AuthSessionProvider>
