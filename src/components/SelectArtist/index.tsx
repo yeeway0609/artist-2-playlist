@@ -5,23 +5,30 @@ import { useDebouncedCallback } from 'use-debounce'
 import { Button } from '@/components/ui/button'
 import { Command, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import sdk from '@/lib/spotifySdk'
+import { searchArtist } from '@/lib/spotifyServices'
 
 type SelectArtistProps = {
   selectedArtist: Artist | null
   setSelectedArtist: (artist: Artist) => void
+  setIsError: (isError: boolean) => void
 }
 
-export default function SelectArtist({ selectedArtist, setSelectedArtist }: SelectArtistProps) {
+export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsError }: SelectArtistProps) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [results, setResults] = useState<Artist[] | null>(null)
 
   const debouncedSearchArtist = useDebouncedCallback(async (input: string) => {
     if (!input) return
-    const results = await sdk.search(input, ['artist'])
-    if (!results) return
-    setResults(results.artists.items)
+
+    try {
+      const results = await searchArtist(input)
+      if (!results) return
+      setResults(results)
+    } catch (error) {
+      setIsError(true)
+      console.error('Error occurred while searching for artists:', error)
+    }
   }, 300)
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {

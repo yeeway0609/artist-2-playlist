@@ -8,6 +8,7 @@ import SelectArtist from '@/components/SelectArtist'
 import SelectPlaylist from '@/components/SelectPlaylist'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -33,6 +34,7 @@ const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0
 
 export default function App() {
   const { resolvedTheme } = useTheme()
+  const [isError, setIsError] = useState(false)
   const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
   const [includedAlbumTypes, setIncludedAlbumTypes] = useState<AlbumType[]>([
@@ -46,14 +48,14 @@ export default function App() {
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
   const [isRemoveDuplicatesEnabled, setIsRemoveDuplicatesEnabled] = useState(false)
-  const [status, setStatus] = useState<AppStatus>(AppStatus.Idle)
+  const [appStatus, setAppStatus] = useState<AppStatus>(AppStatus.Idle)
   const [processingAlbum, setProcessingAlbum] = useState('')
   const [addedTracksCount, setAddedTracksCount] = useState(0)
   const isButtonDisabled =
     !selectedArtist ||
     (playlistActionType === 'existing' && !selectedPlaylist) ||
     (playlistActionType === 'create' && newPlaylistName.trim() === '') ||
-    status === AppStatus.Processing
+    appStatus === AppStatus.Processing
 
   async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
     try {
@@ -78,7 +80,8 @@ export default function App() {
 
       return tracks
     } catch (error) {
-      console.error('Error getting all tracks from artist:', error)
+      setIsError(true)
+      console.error('Error occurred while fetching tracks:', error)
       return []
     }
   }
@@ -113,46 +116,57 @@ export default function App() {
   async function startWithExistingPlaylist() {
     if (!selectedArtist || !selectedPlaylist || playlistActionType !== 'existing') return
 
-    setAddedTracksCount(0)
-    setStatus(AppStatus.Processing)
-    arrowLottie?.play()
+    try {
+      setAddedTracksCount(0)
+      setAppStatus(AppStatus.Processing)
+      arrowLottie?.play()
 
-    let tracks = await getAllTracksFromArtist(selectedArtist.id)
+      let tracks = await getAllTracksFromArtist(selectedArtist.id)
 
-    if (isRemoveDuplicatesEnabled) tracks = removeDuplicateTracks(tracks)
+      if (isRemoveDuplicatesEnabled) tracks = removeDuplicateTracks(tracks)
 
-    await addTracksToPlaylist(selectedPlaylist.id, tracks)
+      await addTracksToPlaylist(selectedPlaylist.id, tracks)
 
-    arrowLottie?.stop()
-    setStatus(AppStatus.Done)
+      arrowLottie?.stop()
+      setAppStatus(AppStatus.Done)
+    } catch (error) {
+      setIsError(true)
+      console.error('Error occurred while adding tracks to playlist:', error)
+    }
   }
 
   async function startWithNewPlaylist() {
     if (!selectedArtist || newPlaylistName.trim() === '' || playlistActionType !== 'create') return
 
-    setAddedTracksCount(0)
-    setStatus(AppStatus.Processing)
-    arrowLottie?.play()
+    try {
+      setAddedTracksCount(0)
+      setAppStatus(AppStatus.Processing)
+      arrowLottie?.play()
 
-    let tracks = await getAllTracksFromArtist(selectedArtist.id)
+      let tracks = await getAllTracksFromArtist(selectedArtist.id)
 
-    if (isRemoveDuplicatesEnabled) tracks = removeDuplicateTracks(tracks)
+      if (isRemoveDuplicatesEnabled) tracks = removeDuplicateTracks(tracks)
 
-    const user = await getCurrentUser()
-    if (!user) return
-    const newPlaylist = await createPlaylist(user.id, newPlaylistName)
-    if (!newPlaylist) return
-    await addTracksToPlaylist(newPlaylist.id, tracks)
+      const user = await getCurrentUser()
+      if (!user) return
+      const newPlaylist = await createPlaylist(user.id, newPlaylistName)
+      if (!newPlaylist) return
+      await addTracksToPlaylist(newPlaylist.id, tracks)
 
-    arrowLottie?.stop()
-    setStatus(AppStatus.Done)
+      arrowLottie?.stop()
+      setAppStatus(AppStatus.Done)
+    } catch (error) {
+      setIsError(true)
+      console.error('Error occurred while adding tracks to playlist:', error)
+    }
   }
 
   return (
     <div className="w-full max-w-[300px] pb-36 pt-10">
       <section>
+        <button onClick={() => console.log(status)}>status</button>
         <h2 className="text-h2 mb-2">Artist</h2>
-        <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
+        <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} setIsError={setIsError} />
 
         <h3 className="mb-1.5 mt-2.5 font-medium">Included album types</h3>
         <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1">
@@ -223,13 +237,13 @@ export default function App() {
         </div>
       </section>
 
-      {status === 'processing' && (
+      {appStatus === AppStatus.Processing && (
         <p className="h-10 truncate text-sm text-primary">
           Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
         </p>
       )}
 
-      {status === 'done' && (
+      {appStatus === AppStatus.Done && (
         <p className="h-10 text-sm text-primary">Process completed! 🎉🎉🎉 Added {addedTracksCount} tracks.</p>
       )}
 
@@ -242,6 +256,15 @@ export default function App() {
           Start
         </Button>
       </div>
+
+      <Dialog open={isError}>
+        <DialogContent className="max-w-[200px] rounded outline-none [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle>An error occurred</DialogTitle>
+            <DialogDescription>Please refresh the page and try again.</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

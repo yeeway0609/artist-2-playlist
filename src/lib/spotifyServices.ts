@@ -8,8 +8,16 @@ export async function getCurrentUser() {
     const response = await sdk.currentUser.profile()
     return response
   } catch (error) {
-    console.error('Error getting current user:', error)
-    return null
+    throw error
+  }
+}
+
+export async function searchArtist(query: string) {
+  try {
+    const response = await sdk.search(query, ['artist'])
+    return response.artists.items
+  } catch (error) {
+    throw error
   }
 }
 
@@ -31,8 +39,7 @@ export async function getCurrentUserPlaylists() {
 
     return playlists
   } catch (error) {
-    console.error('Error getting current user playlists:', error)
-    return []
+    throw error
   }
 }
 
@@ -57,8 +64,7 @@ export async function getAlbumsFromArtist(
 
     return albums
   } catch (error) {
-    console.error('Error getting albums from artist:', error)
-    return []
+    throw error
   }
 }
 
@@ -85,8 +91,7 @@ export async function getTracksFromAlbum(albumID: string, artistId?: string): Pr
 
     return tracks
   } catch (error) {
-    console.error('Error getting albums from artist:', error)
-    return []
+    throw error
   }
 }
 
@@ -100,7 +105,7 @@ export async function addTracksToPlaylist(playlistId: string, tracks: Simplified
       await sdk.playlists.addItemsToPlaylist(playlistId, batch)
     }
   } catch (error) {
-    console.error('Error adding tracks to playlist:', error)
+    throw error
   }
 }
 
@@ -109,7 +114,6 @@ export async function createPlaylist(userId: string, name: string) {
     const response = await sdk.playlists.createPlaylist(userId, { name })
     return response
   } catch (error) {
-    console.error('Error creating playlist:', error)
-    return null
+    throw error
   }
 }
