@@ -162,7 +162,7 @@ export default function App() {
   }
 
   return (
-    <div className="w-full max-w-[300px] pb-36 pt-10">
+    <div className="w-full max-w-[300px] pb-20 pt-10">
       <section>
         <button onClick={() => console.log(status)}>status</button>
         <h2 className="text-h2 mb-2">Artist</h2>
