@@ -3,13 +3,14 @@
 import { Fragment, useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
-import { InfoIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import SelectArtist from '@/components/SelectArtist'
 import SelectPlaylist from '@/components/SelectPlaylist'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   addTracksToPlaylist,
@@ -24,6 +25,11 @@ enum AlbumType {
   Single = 'single',
   AppearsOn = 'appears_on',
   Compilation = 'compilation',
+}
+
+enum AlbumOrder {
+  Asc = 'asc',
+  Desc = 'desc',
 }
 
 const albumTypeLabels = {
@@ -60,7 +66,7 @@ export default function App() {
     (playlistActionType === 'existing' && !selectedPlaylist) ||
     (playlistActionType === 'create' && newPlaylistName.trim() === '')
 
-  const [albumOrder, setAlbumOrder] = useState<'asc' | 'desc'>('desc')
+  const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
 
   function handleAlbumTypesChange(value: AlbumType) {
     if (includedAlbumTypes.length === 1 && includedAlbumTypes.includes(value)) return
@@ -76,7 +82,7 @@ export default function App() {
     try {
       const tracks: SimplifiedTrack[] = []
       const albums = await getAlbumsFromArtist(id, includedAlbumTypes.join(','))
-      const sortedAlbums = sortAlbumsByReleaseDate(albums)
+      const sortedAlbums = sortAlbumsByReleaseDate(albums, albumOrder)
       const BATCH_SIZE = 4
 
       for (let i = 0; i < sortedAlbums.length; i += BATCH_SIZE) {
@@ -104,7 +110,7 @@ export default function App() {
     return tracks.filter((track, index, self) => self.findIndex((t) => t.name === track.name) === index)
   }
 
-  function sortAlbumsByReleaseDate(albums: SimplifiedAlbum[], order: 'asc' | 'desc' = 'desc'): SimplifiedAlbum[] {
+  function sortAlbumsByReleaseDate(albums: SimplifiedAlbum[], order: AlbumOrder): SimplifiedAlbum[] {
     return albums.sort((a, b) => {
       const dateA = new Date(a.release_date).getTime()
       const dateB = new Date(b.release_date).getTime()
@@ -161,11 +167,8 @@ export default function App() {
         <h2 className="text-h2 mb-2">Artist</h2>
         <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} />
 
-        <div className="mb-1 mt-2 flex items-center px-1">
-          <h3 className="mb-0.5">Included album types</h3>
-          <InfoIcon className="ml-1 size-4" />
-        </div>
-        <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1 text-sm font-medium leading-none">
+        <h3 className="mb-1.5 mt-2.5 font-medium">Included album types</h3>
+        <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1">
           {Object.values(AlbumType).map((type) => (
             <Fragment key={type}>
               <Checkbox
@@ -173,7 +176,7 @@ export default function App() {
                 checked={includedAlbumTypes.includes(type)}
                 onCheckedChange={() => handleAlbumTypesChange(type)}
               />
-              <label htmlFor={type}>{albumTypeLabels[type]}</label>
+              <Label htmlFor={type}>{albumTypeLabels[type]}</Label>
             </Fragment>
           ))}
         </div>
@@ -210,23 +213,38 @@ export default function App() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-3 flex items-center space-x-2 px-1 text-sm font-medium leading-none">
+        <h3 className="mb-1.5 mt-2.5 font-medium">Order of songs</h3>
+        <RadioGroup
+          className="flex items-center px-1"
+          value={albumOrder}
+          onValueChange={(value) => setAlbumOrder(value as AlbumOrder)}
+        >
+          <RadioGroupItem value={AlbumOrder.Asc} id={AlbumOrder.Asc} />
+          <Label htmlFor={AlbumOrder.Asc}>Oldest to Latest</Label>
+          <RadioGroupItem className="ml-1" value={AlbumOrder.Desc} id={AlbumOrder.Desc} />
+          <Label htmlFor={AlbumOrder.Desc}>Latest to Oldest</Label>
+        </RadioGroup>
+
+        <h3 className="mb-1.5 mt-2.5 font-medium">Duplicate songs</h3>
+        <div className="flex items-center space-x-2 px-1">
           <Checkbox
             id="remove-duplicate"
             checked={isRemoveDuplicatesEnabled}
             onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
           />
-          <label htmlFor="remove-duplicate">Remove songs with duplicate titles</label>
+          <Label htmlFor="remove-duplicate">Remove songs with duplicate titles</Label>
         </div>
       </section>
 
       {status === 'processing' && (
-        <p className="h-10 truncate text-sm">
+        <p className="h-10 truncate text-sm text-primary">
           Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
         </p>
       )}
 
-      {status === 'done' && <p className="h-10 text-sm">Process completed! 🎉🎉🎉 Added {addedTracksCount} tracks.</p>}
+      {status === 'done' && (
+        <p className="h-10 text-sm text-primary">Process completed! 🎉🎉🎉 Added {addedTracksCount} tracks.</p>
+      )}
 
       <div className="mt-4 flex justify-center">
         <Button
