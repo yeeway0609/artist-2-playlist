@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Artist } from '@spotify/web-api-ts-sdk'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useDebouncedCallback } from 'use-debounce'
+import ArrowUpRightIcon from '@/components/ui/arrow-up-right'
 import { Button } from '@/components/ui/button'
 import { Command, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -39,6 +41,7 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsE
 
   function handleSelectArtist(artist: Artist) {
     setSelectedArtist(artist)
+    console.log(artist)
     setOpen(false)
   }
 
@@ -49,7 +52,7 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsE
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="h-auto w-full justify-start gap-4 p-3"
+          className="relative h-auto w-full justify-start gap-4 p-3"
         >
           {selectedArtist ? (
             <>
@@ -68,6 +71,10 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsE
                 <span className="truncate text-xl font-semibold">{selectedArtist.name}</span>
                 <span className="truncate text-secondary-foreground">{selectedArtist.followers.total} followers</span>
               </div>
+
+              <Link className="absolute right-3 top-2" href={selectedArtist.external_urls.spotify} target="_blank">
+                <ArrowUpRightIcon />
+              </Link>
             </>
           ) : (
             <span className="text my-2 text-secondary-foreground">Select an artist...</span>

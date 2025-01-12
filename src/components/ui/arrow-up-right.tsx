@@ -1,3 +1,3 @@
 export default function ArrowUpRightIcon() {
-  return <span className="ml-1 text-sm text-primary">&#8599;</span>
+  return <span className="text-sm text-primary">&#8599;</span>
 }

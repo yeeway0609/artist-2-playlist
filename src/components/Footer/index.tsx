@@ -9,11 +9,11 @@ export default function Footer() {
     <footer className="flex flex-col space-y-1 border-t border-border px-6 py-8">
       <Link href="/privacy-policy">Privacy policy</Link>
       <Link href={GITHUB_URL} target="_blank">
-        GitHub
+        <span className="mr-1">GitHub</span>
         <ArrowUpRightIcon />
       </Link>
       <Link href={REPORT_ISSUE_URL} target="_blank">
-        Report a issue
+        <span className="mr-1">Report a issue</span>
         <ArrowUpRightIcon />
       </Link>
       <p className="pt-1 text-center text-sm text-primary">Copyright © 2025 yeeway</p>
