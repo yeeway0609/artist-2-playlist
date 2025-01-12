@@ -58,6 +58,9 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      backgroundImage: {
+        'gradient-title': 'linear-gradient(120deg, #a6c0fe 0%, #f68084 100%)',
+      },
     },
   },
   plugins: [

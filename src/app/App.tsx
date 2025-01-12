@@ -164,7 +164,6 @@ export default function App() {
   return (
     <div className="w-full max-w-[300px] pb-20 pt-10">
       <section>
-        <button onClick={() => console.log(status)}>status</button>
         <h2 className="text-h2 mb-2">Artist</h2>
         <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} setIsError={setIsError} />
 
@@ -184,6 +183,7 @@ export default function App() {
       </section>
 
       <DotLottieWorkerReact
+        key={resolvedTheme}
         className="mx-auto mb-2 mt-3 h-20 w-[130px]"
         dotLottieRefCallback={setArrowLottie}
         src={resolvedTheme === 'dark' ? LOTTIE_URL_WHITE : LOTTIE_URL_BLACK}

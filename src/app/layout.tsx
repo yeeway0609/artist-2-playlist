@@ -29,7 +29,6 @@ export default async function RootLayout({
               <main className="flex flex-grow flex-col items-center px-5">{children}</main>
               <footer className="flex flex-col space-y-1 border-t border-border px-6 py-8">
                 <Link href="/privacy-policy">Privacy policy</Link>
-                <Link href="/term-of-use">Terms of use</Link>
                 <Link href="https://github.com/yeeway0609/spotify-artist-to-playlist" target="_blank">
                   GitHub
                   <span className="ml-1 text-sm text-primary">&#8599;</span>

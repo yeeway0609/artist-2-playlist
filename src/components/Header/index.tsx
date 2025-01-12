@@ -2,6 +2,7 @@
 
 import { LogOutIcon } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import logoDark from '@/assets/logo-dark.png'
@@ -16,16 +17,17 @@ export default function Header() {
   const { resolvedTheme } = useTheme()
 
   return (
-    <header className="flex justify-between px-5 py-2">
-      <div className="flex items-center space-x-2">
+    <header className="flex justify-between px-5 py-4">
+      <Link href="/" className="flex items-center space-x-2">
         <Image
+          key={resolvedTheme}
           src={resolvedTheme === 'dark' ? logoDark : logoLight}
           alt="Artist2Playlist logo"
           width={28}
           height={28}
         />
-        <p className="mr-auto font-semibold text-primary">Artist2Playlist</p>
-      </div>
+        <p className="mr-auto text-xl font-semibold text-primary">Artist2Playlist</p>
+      </Link>
 
       <div className="flex items-center space-x-3">
         {session.status === 'authenticated' && (
