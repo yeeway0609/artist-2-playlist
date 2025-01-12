@@ -2,7 +2,7 @@
 
 ## Todo
 - issue submission form
-- copyright policy
+- remove songs already in playlist
 
 ## Reference
 - https://github.com/spotify/spotify-web-api-ts-sdk
