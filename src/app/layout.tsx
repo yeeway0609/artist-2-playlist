@@ -9,7 +9,7 @@ import { ThemeProvider } from '@/components/ThemeProvider.tsx'
 
 export const metadata: Metadata = {
   title: 'Artist2Playlist for Spotify',
-  description: 'Add all songs of artist to your playlists on Spotify.',
+  description: 'Add all songs of any artist to your playlists on Spotify.',
 }
 
 export default async function RootLayout({
