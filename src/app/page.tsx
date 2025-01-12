@@ -4,7 +4,6 @@ import { ShuffleIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
-import { useTheme } from 'next-themes'
 import playlistImg from '@/assets/playlist-ado.png'
 import spotifyLogoBlack from '@/assets/spotify-logo-black.svg'
 import spotifyLogoGreen from '@/assets/spotify-logo-green.svg'
@@ -12,10 +11,8 @@ import { Button } from '@/components/ui/button'
 import App from './App'
 
 export default function Home() {
-  const session = useSession()
-  const { resolvedTheme } = useTheme()
-
   const ARTIST_IMAGE = 'https://i.scdn.co/image/ab6761610000e5ebbcb1c184c322688f10cdce7a'
+  const session = useSession()
 
   if (!session || session.status !== 'authenticated') {
     return (
@@ -32,10 +29,10 @@ export default function Home() {
 
         <Button className="h-10 gap-1.5" onClick={() => signIn('spotify')}>
           Sign in with <span className="sr-only">Spotify</span>
+          <Image className="rounded-md dark:hidden" src={spotifyLogoGreen} alt="Spotify logo" width="24" height="24" />
           <Image
-            key={resolvedTheme}
-            className="rounded-md"
-            src={resolvedTheme === 'dark' ? spotifyLogoBlack : spotifyLogoGreen}
+            className="hidden rounded-md dark:block"
+            src={spotifyLogoBlack}
             alt="Spotify logo"
             width="24"
             height="24"

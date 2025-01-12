@@ -4,7 +4,6 @@ import { LogOutIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { useTheme } from 'next-themes'
 import logoDark from '@/assets/logo-dark.png'
 import logoLight from '@/assets/logo-light.png'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -14,19 +13,19 @@ import { DarkModeToggle } from './DarkModeToggle'
 
 export default function Header() {
   const session = useSession()
-  const { resolvedTheme } = useTheme()
 
   return (
     <header className="flex justify-between px-5 py-4">
-      <Link href="/" className="flex items-center space-x-2">
+      <Link href="/" className="flex items-center">
+        <Image className="dark:hidden" src={logoLight} alt="Artist2Playlist logo - light" width={28} height={28} />
         <Image
-          key={resolvedTheme}
-          src={resolvedTheme === 'dark' ? logoDark : logoLight}
-          alt="Artist2Playlist logo"
+          className="hidden dark:block"
+          src={logoDark}
+          alt="Artist2Playlist logo - dark"
           width={28}
           height={28}
         />
-        <p className="mr-auto text-xl font-semibold text-primary">Artist2Playlist</p>
+        <p className="ml-2 text-xl font-semibold text-primary">Artist2Playlist</p>
       </Link>
 
       <div className="flex items-center space-x-3">
