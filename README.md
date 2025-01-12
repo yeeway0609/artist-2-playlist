@@ -1,4 +1,6 @@
-# Spotify Artist to Playlist
+# Artist2Playlist for Spotify
+
+Add all songs of any artist to your playlists on Spotify.
 
 ## Todo
 - issue submission form
