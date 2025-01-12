@@ -19,7 +19,7 @@ export default function Home() {
 
   if (!session || session.status !== 'authenticated') {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-center">
+      <div className="flex h-full flex-col items-center justify-center py-24 text-center">
         <h1 className="max-w-[360px] text-pretty text-4xl font-semibold">
           Add all song of any artist in{' '}
           <span className="bg-gradient-title bg-clip-text text-transparent">One Click</span>
