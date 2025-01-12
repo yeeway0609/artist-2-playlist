@@ -31,12 +31,12 @@ export default function Home() {
         </div>
 
         <Button className="h-10 gap-1.5" onClick={() => signIn('spotify')}>
-          Sign in with{' '}
+          Sign in with <span className="sr-only">Spotify</span>
           <Image
             key={resolvedTheme}
             className="rounded-md"
             src={resolvedTheme === 'dark' ? spotifyLogoBlack : spotifyLogoGreen}
-            alt="Image of Ado"
+            alt="Spotify logo"
             width="24"
             height="24"
           />
