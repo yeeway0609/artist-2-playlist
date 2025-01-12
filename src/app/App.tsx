@@ -3,7 +3,6 @@
 import { Fragment, useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
-import { useTheme } from 'next-themes'
 import SelectArtist from '@/components/SelectArtist'
 import SelectPlaylist from '@/components/SelectPlaylist'
 import { Button } from '@/components/ui/button'
@@ -29,13 +28,12 @@ const albumTypeLabels = {
   [AlbumType.Compilation]: 'Compilation',
 }
 
-const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
-const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
-
 export default function App() {
-  const { resolvedTheme } = useTheme()
+  const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
+  const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
   const [isError, setIsError] = useState(false)
-  const [arrowLottie, setArrowLottie] = useState<DotLottieWorker | null>(null)
+  const [arrowLottieLight, setArrowLottieLight] = useState<DotLottieWorker | null>(null)
+  const [arrowLottieDark, setArrowLottieDark] = useState<DotLottieWorker | null>(null)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
   const [includedAlbumTypes, setIncludedAlbumTypes] = useState<AlbumType[]>([
     AlbumType.Album,
@@ -119,7 +117,8 @@ export default function App() {
     try {
       setAddedTracksCount(0)
       setAppStatus(AppStatus.Processing)
-      arrowLottie?.play()
+      arrowLottieLight?.play()
+      arrowLottieDark?.play()
 
       let tracks = await getAllTracksFromArtist(selectedArtist.id)
 
@@ -127,7 +126,8 @@ export default function App() {
 
       await addTracksToPlaylist(selectedPlaylist.id, tracks)
 
-      arrowLottie?.stop()
+      arrowLottieLight?.stop()
+      arrowLottieDark?.stop()
       setAppStatus(AppStatus.Done)
     } catch (error) {
       setIsError(true)
@@ -141,7 +141,8 @@ export default function App() {
     try {
       setAddedTracksCount(0)
       setAppStatus(AppStatus.Processing)
-      arrowLottie?.play()
+      arrowLottieLight?.play()
+      arrowLottieDark?.play()
 
       let tracks = await getAllTracksFromArtist(selectedArtist.id)
 
@@ -153,7 +154,8 @@ export default function App() {
       if (!newPlaylist) return
       await addTracksToPlaylist(newPlaylist.id, tracks)
 
-      arrowLottie?.stop()
+      arrowLottieLight?.stop()
+      arrowLottieDark?.stop()
       setAppStatus(AppStatus.Done)
     } catch (error) {
       setIsError(true)
@@ -182,13 +184,24 @@ export default function App() {
         </div>
       </section>
 
-      <DotLottieWorkerReact
-        key={resolvedTheme}
-        className="mx-auto mb-2 mt-3 h-20 w-[130px]"
-        dotLottieRefCallback={setArrowLottie}
-        src={resolvedTheme === 'dark' ? LOTTIE_URL_WHITE : LOTTIE_URL_BLACK}
-        loop
-      />
+      <div className="relative mx-auto mb-2 mt-3 h-20 w-[130px]">
+        <DotLottieWorkerReact
+          className="absolute dark:invisible"
+          dotLottieRefCallback={setArrowLottieLight}
+          src={LOTTIE_URL_BLACK}
+          loop
+          width={130}
+          height={80}
+        />
+        <DotLottieWorkerReact
+          className="invisible absolute dark:visible"
+          dotLottieRefCallback={setArrowLottieDark}
+          src={LOTTIE_URL_WHITE}
+          loop
+          width={130}
+          height={80}
+        />
+      </div>
 
       <section className="mb-6">
         <h2 className="text-h2 mb-2">Your Playlist</h2>
