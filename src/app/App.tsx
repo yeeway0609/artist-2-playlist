@@ -3,11 +3,19 @@
 import { Fragment, useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
+import { signOut } from 'next-auth/react'
 import SelectArtist from '@/components/SelectArtist'
 import SelectPlaylist from '@/components/SelectPlaylist'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -31,7 +39,7 @@ const albumTypeLabels = {
 export default function App() {
   const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
   const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
-  const [isError, setIsError] = useState(false)
+  const [isError, setIsError] = useState(true)
   const [arrowLottieLight, setArrowLottieLight] = useState<DotLottieWorker | null>(null)
   const [arrowLottieDark, setArrowLottieDark] = useState<DotLottieWorker | null>(null)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
@@ -271,11 +279,16 @@ export default function App() {
       </div>
 
       <Dialog open={isError}>
-        <DialogContent className="max-w-[200px] rounded outline-none [&>button]:hidden">
+        <DialogContent className="max-w-[250px] rounded outline-none [&>button]:hidden">
           <DialogHeader>
-            <DialogTitle>An error occurred</DialogTitle>
-            <DialogDescription>Please refresh the page and try again.</DialogDescription>
+            <DialogTitle className="text-center">An error occurred</DialogTitle>
+            <DialogDescription className="text-center">Please sign out and try again.</DialogDescription>
           </DialogHeader>
+          <DialogFooter>
+            <Button className="mx-auto" onClick={() => signOut()}>
+              Sign out
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
