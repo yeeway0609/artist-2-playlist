@@ -23,7 +23,13 @@ export default function Home() {
           <span className="bg-gradient-title bg-clip-text text-transparent">One Click</span>
         </h1>
         <div className="my-12 flex items-center gap-5">
-          <Image className="size-[100px] rounded-md" src={ARTIST_IMAGE} alt={ARTIST_IMAGE_ALT} width="100" height="100" />
+          <Image
+            className="size-[100px] rounded-md"
+            src={ARTIST_IMAGE}
+            alt={ARTIST_IMAGE_ALT}
+            width="100"
+            height="100"
+          />
           <ShuffleIcon className="size-10" />
           <Image className="size-[100px] rounded-md" src={playlistImg} alt="Playlist of Ado" width="100" height="100" />
         </div>
@@ -45,6 +51,8 @@ export default function Home() {
             Privacy Policy
           </Link>
         </p>
+        {/* TODO */}
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">This website is still under construction.</p>
       </div>
     )
   }
