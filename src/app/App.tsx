@@ -39,7 +39,7 @@ const albumTypeLabels = {
 export default function App() {
   const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
   const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
-  const [isError, setIsError] = useState(true)
+  const [isError, setIsError] = useState(false)
   const [arrowLottieLight, setArrowLottieLight] = useState<DotLottieWorker | null>(null)
   const [arrowLottieDark, setArrowLottieDark] = useState<DotLottieWorker | null>(null)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
