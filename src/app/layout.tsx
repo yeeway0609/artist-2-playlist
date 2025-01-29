@@ -22,13 +22,13 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <AuthSessionProvider session={session}>
-        <body className="flex justify-center antialiased">
+        <body className="flex min-h-dvh flex-col items-center antialiased">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <div className="flex min-h-dvh w-full max-w-screen-sm flex-col">
+            <div className="flex w-full max-w-screen-sm flex-col">
               <Header />
               <main className="flex flex-grow flex-col items-center px-5">{children}</main>
-              <Footer />
             </div>
+            <Footer />
           </ThemeProvider>
         </body>
       </AuthSessionProvider>

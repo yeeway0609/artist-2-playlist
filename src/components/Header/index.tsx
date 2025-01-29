@@ -15,17 +15,11 @@ export default function Header() {
   const session = useSession()
 
   return (
-    <header className="flex justify-between px-5 py-4">
+    <header className="flex justify-between px-5 py-6">
       <Link href="/" className="flex items-center">
-        <Image className="dark:hidden" src={logoLight} alt="Artist2Playlist logo - light" width={28} height={28} />
-        <Image
-          className="hidden dark:block"
-          src={logoDark}
-          alt="Artist2Playlist logo - dark"
-          width={28}
-          height={28}
-        />
-        <p className="ml-2 text-xl font-semibold text-primary">Artist2Playlist</p>
+        <Image className="dark:hidden" src={logoLight} alt="logo - light" width={32} height={32} />
+        <Image className="hidden dark:block" src={logoDark} alt="logo - dark" width={32} height={32} />
+        <p className="ml-3 text-xl font-semibold text-primary">Artist2Playlist</p>
       </Link>
 
       <div className="flex items-center space-x-3">
