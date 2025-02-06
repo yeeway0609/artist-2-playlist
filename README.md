@@ -11,3 +11,7 @@ Add all songs of any artist to your playlists on Spotify.
 ## Reference
 - https://github.com/spotify/spotify-web-api-ts-sdk
 - https://developer.spotify.com/documentation/web-api
+
+## Testing account
+- Email: foob16064@gmail.com
+- Password: 5alzJV&#5C30
