@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { SimplifiedPlaylist } from '@spotify/web-api-ts-sdk'
+import clsx from 'clsx'
 import Link from 'next/link'
 import ArrowUpRightIcon from '@/components/ui/arrow-up-right'
 import { Button } from '@/components/ui/button'
@@ -38,7 +39,7 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="relative h-auto w-full justify-start gap-4 p-3"
+          className={clsx('relative h-auto w-full justify-start gap-4 p-3', !selectedPlaylist && 'mb-[44px]')}
         >
           {selectedPlaylist ? (
             <>

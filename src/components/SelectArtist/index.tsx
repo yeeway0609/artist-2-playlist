@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Artist } from '@spotify/web-api-ts-sdk'
+import clsx from 'clsx'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useDebouncedCallback } from 'use-debounce'
@@ -52,7 +53,7 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsE
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="relative h-auto w-full justify-start gap-4 p-3"
+          className={clsx('relative h-auto w-full justify-start gap-4 p-3', !selectedArtist && 'mb-[44px]')}
         >
           {selectedArtist ? (
             <>

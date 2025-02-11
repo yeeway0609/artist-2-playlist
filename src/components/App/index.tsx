@@ -177,7 +177,7 @@ export default function App() {
         <h2 className="text-h2 mb-2">Artist</h2>
         <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} setIsError={setIsError} />
 
-        <h3 className="mb-1.5 mt-2.5 font-medium">Included album types</h3>
+        <h3 className="mb-1.5 pt-2.5 font-medium">Included album types</h3>
         <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1">
           {Object.values(AlbumType).map((type) => (
             <Fragment key={type}>

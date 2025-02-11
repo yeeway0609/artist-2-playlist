@@ -7,8 +7,8 @@ import { useSession, signIn } from 'next-auth/react'
 import playlistImg from '@/assets/playlist-ado.png'
 import spotifyLogoBlack from '@/assets/spotify-logo-black.svg'
 import spotifyLogoGreen from '@/assets/spotify-logo-green.svg'
+import App from '@/components/App'
 import { Button } from '@/components/ui/button'
-import App from './App'
 
 export default function Home() {
   const ARTIST_IMAGE = 'https://i.scdn.co/image/ab6761610000e5ebbcb1c184c322688f10cdce7a'
