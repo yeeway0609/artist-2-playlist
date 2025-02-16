@@ -4,7 +4,8 @@ import clsx from 'clsx'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useDebouncedCallback } from 'use-debounce'
-import ArrowUpRightIcon from '@/components/ui/arrow-up-right'
+import spotifyLogoBlack from '@/assets/spotify-logo-black.svg'
+import spotifyLogoWhite from '@/assets/spotify-logo-white.svg'
 import { Button } from '@/components/ui/button'
 import { Command, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -66,19 +67,25 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsE
                   height={80}
                 />
               ) : (
-                <div className="flex size-20 items-center justify-center bg-muted text-secondary-foreground">NaN</div>
+                <div className="flex size-20 items-center justify-center bg-muted">NaN</div>
               )}
               <div className="flex flex-col items-start">
                 <span className="truncate text-xl font-semibold">{selectedArtist.name}</span>
-                <span className="truncate text-secondary-foreground">{selectedArtist.followers.total} followers</span>
+                <span className="truncate">{selectedArtist.followers.total} followers</span>
+                <Link
+                  className="mt-1 flex items-center text-xs hover:underline hover:underline-offset-2"
+                  href={selectedArtist.external_urls.spotify}
+                  target="_blank"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Image className="mr-1 size-[21px] dark:hidden" src={spotifyLogoBlack} alt="Spotify - logo" />
+                  <Image className="mr-1 hidden size-[21px] dark:block" src={spotifyLogoWhite} alt="Spotify - logo" />
+                  Play on Spotify
+                </Link>
               </div>
-
-              <Link className="absolute right-3 top-2" href={selectedArtist.external_urls.spotify} target="_blank">
-                <ArrowUpRightIcon />
-              </Link>
             </>
           ) : (
-            <span className="text my-2 text-secondary-foreground">Select an artist...</span>
+            <span className="text my-2">Select an artist...</span>
           )}
         </Button>
       </PopoverTrigger>
