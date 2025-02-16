@@ -7,12 +7,14 @@ import { useSession, signIn } from 'next-auth/react'
 import playlistImg from '@/assets/playlist-ado.png'
 import spotifyLogoBlack from '@/assets/spotify-logo-black.svg'
 import spotifyLogoGreen from '@/assets/spotify-logo-green.svg'
+import spotifyLogoWhite from '@/assets/spotify-logo-white.svg'
 import App from '@/components/App'
 import { Button } from '@/components/ui/button'
 
+const ARTIST_IMAGE = 'https://i.scdn.co/image/ab6761610000e5ebbcb1c184c322688f10cdce7a'
+const ARTIST_IMAGE_ALT = 'Ado (https://open.spotify.com/artist/6mEQK9m2krja6X1cfsAjfl)'
+
 export default function Home() {
-  const ARTIST_IMAGE = 'https://i.scdn.co/image/ab6761610000e5ebbcb1c184c322688f10cdce7a'
-  const ARTIST_IMAGE_ALT = 'Ado (https://open.spotify.com/artist/6mEQK9m2krja6X1cfsAjfl)'
   const session = useSession()
 
   if (!session || session.status !== 'authenticated') {
@@ -23,13 +25,16 @@ export default function Home() {
           <span className="bg-gradient-title bg-clip-text text-transparent">One Click</span>
         </h1>
         <div className="my-12 flex items-center gap-5">
-          <Image
-            className="size-[100px] rounded-md"
-            src={ARTIST_IMAGE}
-            alt={ARTIST_IMAGE_ALT}
-            width="100"
-            height="100"
-          />
+          <Link className="relative" href="https://open.spotify.com/artist/6mEQK9m2krja6X1cfsAjfl" target="_blank">
+            <Image
+              className="size-[100px] rounded-md"
+              src={ARTIST_IMAGE}
+              alt={ARTIST_IMAGE_ALT}
+              width="100"
+              height="100"
+            />
+            <Image className="absolute left-1 top-1 size-[21px]" src={spotifyLogoWhite} alt="" width="21" height="21" />
+          </Link>
           <ShuffleIcon className="size-10" />
           <Image className="size-[100px] rounded-md" src={playlistImg} alt="Playlist of Ado" width="100" height="100" />
         </div>
