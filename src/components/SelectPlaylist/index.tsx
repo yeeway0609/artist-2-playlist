@@ -41,7 +41,7 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={clsx('relative h-auto w-full justify-start gap-4 p-3', !selectedPlaylist && 'mb-[44px]')}
+          className={clsx('relative h-auto w-full justify-start gap-4 p-3')}
         >
           {selectedPlaylist ? (
             <>
