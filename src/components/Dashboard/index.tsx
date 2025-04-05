@@ -132,7 +132,10 @@ export default function Dashboard() {
 
       let tracks = await getAllTracksFromArtist(selectedArtist.id)
 
-      if (isRemoveDuplicatesEnabled) tracks = removeDuplicateTracks(tracks)
+      if (isRemoveDuplicatesEnabled) {
+        tracks = removeDuplicateTracks(tracks)
+        setAddedTracksCount(tracks.length)
+      }
 
       await addTracksToPlaylist(selectedPlaylist.id, tracks)
 
@@ -156,7 +159,10 @@ export default function Dashboard() {
 
       let tracks = await getAllTracksFromArtist(selectedArtist.id)
 
-      if (isRemoveDuplicatesEnabled) tracks = removeDuplicateTracks(tracks)
+      if (isRemoveDuplicatesEnabled) {
+        tracks = removeDuplicateTracks(tracks)
+        setAddedTracksCount(tracks.length)
+      }
 
       const user = await getCurrentUser()
       if (!user) return
