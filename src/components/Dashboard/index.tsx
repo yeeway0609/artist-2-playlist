@@ -3,7 +3,9 @@
 import { Fragment, useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
+import clsx from 'clsx'
 import { signOut } from 'next-auth/react'
+import { useTheme } from 'next-themes'
 import SelectArtist from '@/components/SelectArtist'
 import SelectPlaylist from '@/components/SelectPlaylist'
 import { Button } from '@/components/ui/button'
@@ -41,6 +43,7 @@ const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b
 const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
 
 export default function Dashboard() {
+  const { theme } = useTheme()
   const [isError, setIsError] = useState(false)
   const [arrowLottieLight, setArrowLottieLight] = useState<DotLottieWorker | null>(null)
   const [arrowLottieDark, setArrowLottieDark] = useState<DotLottieWorker | null>(null)
@@ -196,7 +199,7 @@ export default function Dashboard() {
 
       <div className="relative mx-auto mb-2 mt-3 h-20 w-[130px]">
         <DotLottieWorkerReact
-          className="absolute dark:invisible"
+          className={clsx('absolute dark:invisible', theme === 'dark' ? 'invisible' : 'visible')}
           dotLottieRefCallback={setArrowLottieLight}
           src={LOTTIE_URL_BLACK}
           loop
@@ -204,7 +207,7 @@ export default function Dashboard() {
           height={80}
         />
         <DotLottieWorkerReact
-          className="invisible absolute dark:visible"
+          className={clsx('invisible absolute dark:visible', theme === 'dark' ? 'visible' : 'invisible')}
           dotLottieRefCallback={setArrowLottieDark}
           src={LOTTIE_URL_WHITE}
           loop
