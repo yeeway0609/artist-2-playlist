@@ -10,7 +10,7 @@ export enum AlbumOrder {
   Desc = 'desc',
 }
 
-export enum AppStatus {
+export enum ProcessingStatus {
   Idle = 'idle',
   Processing = 'processing',
   Done = 'done',

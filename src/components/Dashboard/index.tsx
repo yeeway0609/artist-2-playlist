@@ -19,8 +19,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AlbumOrder, AlbumType, AppStatus } from '@/lib/enums'
+import { AlbumOrder, AlbumType, ProcessingStatus } from '@/lib/enums'
 import {
   addTracksToPlaylist,
   createPlaylist,
@@ -36,9 +37,10 @@ const albumTypeLabels = {
   [AlbumType.Compilation]: 'Compilation',
 }
 
-export default function App() {
-  const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
-  const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
+const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
+const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
+
+export default function Dashboard() {
   const [isError, setIsError] = useState(false)
   const [arrowLottieLight, setArrowLottieLight] = useState<DotLottieWorker | null>(null)
   const [arrowLottieDark, setArrowLottieDark] = useState<DotLottieWorker | null>(null)
@@ -54,14 +56,14 @@ export default function App() {
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
   const [isRemoveDuplicatesEnabled, setIsRemoveDuplicatesEnabled] = useState(false)
-  const [appStatus, setAppStatus] = useState<AppStatus>(AppStatus.Idle)
+  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>(ProcessingStatus.Idle)
   const [processingAlbum, setProcessingAlbum] = useState('')
   const [addedTracksCount, setAddedTracksCount] = useState(0)
   const isButtonDisabled =
     !selectedArtist ||
     (playlistActionType === 'existing' && !selectedPlaylist) ||
     (playlistActionType === 'create' && newPlaylistName.trim() === '') ||
-    appStatus === AppStatus.Processing
+    processingStatus === ProcessingStatus.Processing
 
   async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
     try {
@@ -124,7 +126,7 @@ export default function App() {
 
     try {
       setAddedTracksCount(0)
-      setAppStatus(AppStatus.Processing)
+      setProcessingStatus(ProcessingStatus.Processing)
       arrowLottieLight?.play()
       arrowLottieDark?.play()
 
@@ -136,7 +138,7 @@ export default function App() {
 
       arrowLottieLight?.stop()
       arrowLottieDark?.stop()
-      setAppStatus(AppStatus.Done)
+      setProcessingStatus(ProcessingStatus.Done)
     } catch (error) {
       setIsError(true)
       console.error('Error occurred while adding tracks to playlist:', error)
@@ -148,7 +150,7 @@ export default function App() {
 
     try {
       setAddedTracksCount(0)
-      setAppStatus(AppStatus.Processing)
+      setProcessingStatus(ProcessingStatus.Processing)
       arrowLottieLight?.play()
       arrowLottieDark?.play()
 
@@ -164,7 +166,7 @@ export default function App() {
 
       arrowLottieLight?.stop()
       arrowLottieDark?.stop()
-      setAppStatus(AppStatus.Done)
+      setProcessingStatus(ProcessingStatus.Done)
     } catch (error) {
       setIsError(true)
       console.error('Error occurred while adding tracks to playlist:', error)
@@ -235,21 +237,21 @@ export default function App() {
           </TabsContent>
         </Tabs>
 
-        <h3 className="mb-1.5 mt-2.5 font-medium">Order of songs</h3>
-        <RadioGroup
-          className="flex items-center px-1"
-          value={albumOrder}
-          onValueChange={(value) => setAlbumOrder(value as AlbumOrder)}
-        >
-          <RadioGroupItem value={AlbumOrder.Asc} id={AlbumOrder.Asc} />
-          <Label htmlFor={AlbumOrder.Asc}>Oldest to Latest</Label>
-          <RadioGroupItem className="ml-1" value={AlbumOrder.Desc} id={AlbumOrder.Desc} />
-          <Label htmlFor={AlbumOrder.Desc}>Latest to Oldest</Label>
+        <h3 className="mb-1.5 mt-3 font-medium">Order of songs</h3>
+        <RadioGroup value={albumOrder} onValueChange={(value) => setAlbumOrder(value as AlbumOrder)}>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value={AlbumOrder.Asc} id={AlbumOrder.Asc} />
+            <Label htmlFor={AlbumOrder.Asc}>Oldest &#8594; Latest</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value={AlbumOrder.Desc} id={AlbumOrder.Desc} />
+            <Label htmlFor={AlbumOrder.Desc}>Latest &#8594; Oldest</Label>
+          </div>
         </RadioGroup>
 
-        <h3 className="mb-1.5 mt-2.5 font-medium">Duplicate songs</h3>
-        <div className="flex items-center space-x-2 px-1">
-          <Checkbox
+        <h3 className="mb-1.5 mt-3 font-medium">Duplicate songs</h3>
+        <div className="flex items-center gap-2">
+          <Switch
             id="remove-duplicate"
             checked={isRemoveDuplicatesEnabled}
             onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
@@ -258,13 +260,13 @@ export default function App() {
         </div>
       </section>
 
-      {appStatus === AppStatus.Processing && (
+      {processingStatus === ProcessingStatus.Processing && (
         <p className="h-10 truncate text-sm text-primary">
           Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
         </p>
       )}
 
-      {appStatus === AppStatus.Done && (
+      {processingStatus === ProcessingStatus.Done && (
         <p className="h-10 text-sm text-primary">Process completed! 🎉🎉🎉 Added {addedTracksCount} tracks.</p>
       )}
 
