@@ -75,7 +75,7 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0">
+      <PopoverContent className="w-[300px] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
         <Command>
           <CommandInput placeholder="Search your playlist..." />
           <CommandList>
