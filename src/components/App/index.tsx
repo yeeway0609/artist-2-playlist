@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlbumOrder, AlbumType, AppStatus } from '@/lib/enums'
 import {
@@ -235,21 +236,21 @@ export default function App() {
           </TabsContent>
         </Tabs>
 
-        <h3 className="mb-1.5 mt-2.5 font-medium">Order of songs</h3>
-        <RadioGroup
-          className="flex items-center px-1"
-          value={albumOrder}
-          onValueChange={(value) => setAlbumOrder(value as AlbumOrder)}
-        >
-          <RadioGroupItem value={AlbumOrder.Asc} id={AlbumOrder.Asc} />
-          <Label htmlFor={AlbumOrder.Asc}>Oldest to Latest</Label>
-          <RadioGroupItem className="ml-1" value={AlbumOrder.Desc} id={AlbumOrder.Desc} />
-          <Label htmlFor={AlbumOrder.Desc}>Latest to Oldest</Label>
+        <h3 className="mb-1.5 mt-3 font-medium">Order of songs</h3>
+        <RadioGroup value={albumOrder} onValueChange={(value) => setAlbumOrder(value as AlbumOrder)}>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value={AlbumOrder.Asc} id={AlbumOrder.Asc} />
+            <Label htmlFor={AlbumOrder.Asc}>Oldest &#8594; Latest</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value={AlbumOrder.Desc} id={AlbumOrder.Desc} />
+            <Label htmlFor={AlbumOrder.Desc}>Latest &#8594; Oldest</Label>
+          </div>
         </RadioGroup>
 
-        <h3 className="mb-1.5 mt-2.5 font-medium">Duplicate songs</h3>
-        <div className="flex items-center space-x-2 px-1">
-          <Checkbox
+        <h3 className="mb-1.5 mt-3 font-medium">Duplicate songs</h3>
+        <div className="flex items-center gap-2">
+          <Switch
             id="remove-duplicate"
             checked={isRemoveDuplicatesEnabled}
             onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}

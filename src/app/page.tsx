@@ -56,8 +56,6 @@ export default function Home() {
             Privacy Policy
           </Link>
         </p>
-        {/* TODO */}
-        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">This website is still under construction.</p>
       </div>
     )
   }

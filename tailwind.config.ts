@@ -70,7 +70,7 @@ export default {
           '@apply text-primary text-xl font-semibold': {},
         },
         '.text-link': {
-          '@apply underline underline-offset-2 break-all': {},
+          '@apply underline underline-offset-4 break-all': {},
         },
       })
     }),
