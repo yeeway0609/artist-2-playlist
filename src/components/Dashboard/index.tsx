@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
 import { signOut } from 'next-auth/react'
@@ -179,17 +179,18 @@ export default function Dashboard() {
         <h2 className="text-h2 mb-2">Artist</h2>
         <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} setIsError={setIsError} />
 
-        <h3 className="mb-1.5 pt-2.5 font-medium">Included album types</h3>
-        <div className="grid grid-cols-[16px_auto_16px_auto] gap-2 px-1">
+        <h3 className="mb-2 mt-3 font-medium">Included album types</h3>
+        <div className="flex flex-wrap gap-y-3">
           {Object.values(AlbumType).map((type) => (
-            <Fragment key={type}>
+            <div className="flex w-1/2 items-center gap-x-2" key={type}>
               <Checkbox
+                className="size-[18px]"
                 id={type}
                 checked={includedAlbumTypes.includes(type)}
                 onCheckedChange={() => handleAlbumTypesChange(type)}
               />
               <Label htmlFor={type}>{albumTypeLabels[type]}</Label>
-            </Fragment>
+            </div>
           ))}
         </div>
       </section>
@@ -241,26 +242,32 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
 
-        <h3 className="mb-1.5 mt-3 font-medium">Order of songs</h3>
-        <RadioGroup value={albumOrder} onValueChange={(value) => setAlbumOrder(value as AlbumOrder)}>
-          <div className="flex items-center gap-2">
+        <h3 className="mb-2 mt-3 font-medium">Order of songs</h3>
+        <RadioGroup className="gap-3" value={albumOrder} onValueChange={(value) => setAlbumOrder(value as AlbumOrder)}>
+          <div className="flex items-center gap-x-2">
             <RadioGroupItem value={AlbumOrder.Asc} id={AlbumOrder.Asc} />
-            <Label htmlFor={AlbumOrder.Asc}>Oldest &#8594; Latest</Label>
+            <Label htmlFor={AlbumOrder.Asc} className={albumOrder === AlbumOrder.Asc ? '' : 'text-muted-foreground'}>
+              Oldest &#8594; Latest
+            </Label>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-x-2">
             <RadioGroupItem value={AlbumOrder.Desc} id={AlbumOrder.Desc} />
-            <Label htmlFor={AlbumOrder.Desc}>Latest &#8594; Oldest</Label>
+            <Label htmlFor={AlbumOrder.Desc} className={albumOrder === AlbumOrder.Desc ? '' : 'text-muted-foreground'}>
+              Latest &#8594; Oldest
+            </Label>
           </div>
         </RadioGroup>
 
-        <h3 className="mb-1.5 mt-3 font-medium">Duplicate songs</h3>
-        <div className="flex items-center gap-2">
+        <h3 className="mb-2 mt-3 font-medium">Duplicate songs</h3>
+        <div className="flex items-center gap-x-2">
           <Switch
             id="remove-duplicate"
             checked={isRemoveDuplicatesEnabled}
             onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
           />
-          <Label htmlFor="remove-duplicate">Remove songs with duplicate titles</Label>
+          <Label htmlFor="remove-duplicate" className={isRemoveDuplicatesEnabled ? '' : 'text-muted-foreground'}>
+            Remove songs with duplicate titles
+          </Label>
         </div>
       </section>
 
@@ -271,7 +278,9 @@ export default function Dashboard() {
       )}
 
       {processingStatus === ProcessingStatus.Done && (
-        <p className="h-10 text-sm text-primary">Process completed! 🎉🎉🎉 Added {addedTracksCount} tracks.</p>
+        <p className="h-10 text-sm text-primary">
+          🎉 Process completed! Added <span className="font-semibold">{addedTracksCount} </span>tracks.
+        </p>
       )}
 
       <div className="mt-4 flex justify-center">
