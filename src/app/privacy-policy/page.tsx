@@ -44,13 +44,14 @@ export default function PrivacyPolicy() {
       <p>
         In line with transparency and community collaboration, we have made our source code available on GitHub. You can
         access it here:{' '}
-        <a className="text-link" href="https://github.com/yeeway0609/spotify-artist-to-playlist" target="_blank">
-          https://github.com/yeeway0609/spotify-artist-to-playlist
+        <a className="text-link" href="https://github.com/yeeway0609/artist-2-playlist" target="_blank">
+          https://github.com/yeeway0609/artist-2-playlist
         </a>
         . If you have any questions or concerns about this website, please contact us at{' '}
-        <a className="text-link" href="https://github.com/yeeway0609" target="_blank">
-          https://github.com/yeeway0609
+        <a className="text-link" href="mailto:hi@yeeway.dev" target="_blank">
+          hi@yeeway.dev
         </a>
+        .
       </p>
     </div>
   )
