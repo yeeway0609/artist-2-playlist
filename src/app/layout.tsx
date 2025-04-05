@@ -23,7 +23,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <AuthSessionProvider session={session}>
         <body className="flex min-h-dvh flex-col items-center antialiased">
-          <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <div className="flex w-full max-w-screen-sm flex-col">
               <Header />
               <main className="flex flex-grow flex-col items-center px-5">{children}</main>
