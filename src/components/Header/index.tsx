@@ -101,7 +101,7 @@ function MenuButton() {
           <MenuIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="mr-5 mt-1 w-36">
+      <DropdownMenuContent className="mr-5 mt-1 w-36 md:mr-0">
         <DropdownMenuLabel>Menu</DropdownMenuLabel>
         <DropdownMenuSeparator />
 
