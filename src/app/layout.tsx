@@ -9,7 +9,22 @@ import { ThemeProvider } from '@/components/ThemeProvider.tsx'
 
 export const metadata: Metadata = {
   title: 'Artist2Playlist for Spotify',
-  description: 'Add every song by any artist to your playlists on Spotify.',
+  description: 'Add every song by any artist to your playlists on Spotify in one click.',
+  openGraph: {
+    type: "website",
+    url: 'https://artist-2-playlist.vercel.app',
+    title: 'Artist2Playlist for Spotify',
+    description: 'Add every song by any artist to your playlists on Spotif in one click.',
+    siteName: 'Artist2Playlist',
+    images: [
+      {
+        url: 'https://artist-2-playlist.vercel.app/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Artist2Playlist for Spotify',
+      },
+    ],
+  }
 }
 
 export default async function RootLayout({
