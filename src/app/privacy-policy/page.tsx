@@ -3,7 +3,11 @@ export default function Page() {
     <div className="text-wrap px-2 pb-20">
       <h1 className="page-title">Privacy Policy</h1>
 
-      <h2 className="text-h2">Use of Information</h2>
+      <p className="text-center">Last updated: 2025.04.21</p>
+      <br />
+      <p>If you choose to use our service, then you agree to the following terms in this policy:</p>
+
+      <h2 className="text-h2 mt-4">Use of Information</h2>
       <p>We access the following information from your Spotify account:</p>
       <ul className="list-disc pl-5">
         <li>
@@ -42,6 +46,13 @@ export default function Page() {
         <br />
         For more details on how these services collect and process data, please refer to their respective privacy
         policies.
+      </p>
+
+      <h2 className="text-h2 mt-4">Changes to This Privacy Policy</h2>
+      <p>
+        We may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for
+        any changes. We will notify you of any changes by posting the new Privacy Policy on this page. These changes are
+        effective immediately after they are posted on this page.
       </p>
 
       <h2 className="text-h2 mt-4">Contact Us</h2>
