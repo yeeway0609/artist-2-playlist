@@ -22,7 +22,7 @@ export type AuthUser = {
 const authOptions: AuthOptions = {
   providers: [spotifyProfile],
   session: {
-    maxAge: 2 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60,
   },
   callbacks: {
     async jwt({ token, account }: { token: JWT; account: Account | null }) {
