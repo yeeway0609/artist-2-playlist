@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
 import { signOut } from 'next-auth/react'
-import SelectArtist from '@/components/SelectArtist'
-import SelectPlaylist from '@/components/SelectPlaylist'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -29,6 +27,8 @@ import {
   getCurrentUser,
   getTracksFromAlbum,
 } from '@/lib/spotifyServices'
+import SelectArtist from './SelectArtist'
+import SelectPlaylist from './SelectPlaylist'
 
 const albumTypeLabels = {
   [AlbumType.Album]: 'Album',
