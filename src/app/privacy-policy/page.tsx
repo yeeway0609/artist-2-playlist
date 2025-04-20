@@ -1,7 +1,7 @@
 export default function Page() {
   return (
     <div className="text-wrap px-2 pb-20">
-      <h1 className="mb-8 mt-4 text-center text-2xl font-semibold text-primary">Privacy Policy</h1>
+      <h1 className="page-title">Privacy Policy</h1>
 
       <h2 className="text-h2">Use of Information</h2>
       <p>We access the following information from your Spotify account:</p>

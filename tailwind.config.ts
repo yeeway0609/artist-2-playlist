@@ -72,6 +72,9 @@ export default {
         '.text-link': {
           '@apply underline underline-offset-4 break-all': {},
         },
+        '.page-title': {
+          '@apply mb-8 mt-4 text-center text-2xl font-semibold text-primary': {},
+        },
       })
     }),
     tailwindcssAnimatePlugin,
