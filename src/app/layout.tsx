@@ -1,3 +1,4 @@
+import { GoogleAnalytics } from '@next/third-parties/google'
 import type { Metadata } from 'next'
 import './globals.css'
 import { getServerSession } from 'next-auth'
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   title: 'Artist2Playlist for Spotify',
   description: 'Add every song by any artist to your playlists on Spotify in one click.',
   openGraph: {
-    type: "website",
+    type: 'website',
     url: 'https://artist-2-playlist.vercel.app',
     title: 'Artist2Playlist for Spotify',
     description: 'Add every song by any artist to your playlists on Spotif in one click.',
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
         alt: 'Artist2Playlist for Spotify',
       },
     ],
-  }
+  },
 }
 
 export default async function RootLayout({
@@ -47,6 +48,8 @@ export default async function RootLayout({
           </ThemeProvider>
         </body>
       </AuthSessionProvider>
+
+      <GoogleAnalytics gaId="G-X7B3GRM3N4" />
     </html>
   )
 }
