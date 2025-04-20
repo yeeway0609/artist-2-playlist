@@ -105,6 +105,12 @@ function MenuButton() {
         <DropdownMenuLabel>Menu</DropdownMenuLabel>
         <DropdownMenuSeparator />
 
+        <Link href="/">
+          <DropdownMenuItem className="cursor-pointer">
+            <span>Home</span>
+          </DropdownMenuItem>
+        </Link>
+
         <Link href="/how-to-use">
           <DropdownMenuItem className="cursor-pointer">
             <span>How to use</span>
