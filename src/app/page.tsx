@@ -11,7 +11,7 @@ import spotifyLogoWhite from '@/assets/spotify-logo-white.svg'
 import Dashboard from '@/components/Dashboard'
 import { Button } from '@/components/ui/button'
 
-export default function Home() {
+export default function Page() {
   const session = useSession()
 
   if (!session || session.status !== 'authenticated') {

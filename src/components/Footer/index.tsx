@@ -11,17 +11,13 @@ export default function Footer() {
             <span className="mr-1">Feedback form</span>
             <ArrowUpRightIcon />
           </Link>
-          <Link href="https://github.com/yeeway0609/artist-2-playlist" target="_blank">
-            <span className="mr-1">GitHub</span>
-            <ArrowUpRightIcon />
-          </Link>
         </div>
         <p className="mt-2 text-center text-sm text-primary">
           Built by{' '}
           <Link className="text-link" href="mailto:hi@yeeway.dev" target="_blank">
             yeeway
           </Link>{' '}
-          © 2025
+          © Artist2Playlist for Spotify 2025
         </p>
       </footer>
     </div>

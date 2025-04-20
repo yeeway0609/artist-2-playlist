@@ -1,12 +1,10 @@
-export default function PrivacyPolicy() {
+export default function Page() {
   return (
-    <div className="text-wrap pb-20">
-      <h1 className="my-4 text-center text-2xl font-semibold text-primary">Privacy Policy</h1>
+    <div className="text-wrap px-2 pb-20">
+      <h1 className="mb-8 mt-4 text-center text-2xl font-semibold text-primary">Privacy Policy</h1>
 
       <h2 className="text-h2">Use of Information</h2>
-      <p>
-        We access the following information from your <strong>Spotify</strong> account:
-      </p>
+      <p>We access the following information from your Spotify account:</p>
       <ul className="list-disc pl-5">
         <li>
           <strong>User Profile</strong>: such as your display name and profile image.
@@ -20,7 +18,10 @@ export default function PrivacyPolicy() {
       </ul>
 
       <h2 className="text-h2 mt-4">Data Access and Storage</h2>
-      <p>We access your data only through Spotify Web API, and do not collect any personal data on our servers.</p>
+      <p>
+        We access your data only through Spotify Web API, and <span className="text-red-400">do not</span> collect any
+        personal data on our servers.
+      </p>
 
       <h2 className="text-h2 mt-4">Compliance with Spotify Developer Policy</h2>
       <p>
@@ -36,8 +37,11 @@ export default function PrivacyPolicy() {
       <p>
         We utilize third-party services, such as <strong>Google Analytics</strong>, to collect basic website traffic
         information. These services help us understand user interactions with our website, enabling us to improve our
-        services. For more details on how these services collect and process data, please refer to their respective
-        privacy policies.
+        services.
+        <br />
+        <br />
+        For more details on how these services collect and process data, please refer to their respective privacy
+        policies.
       </p>
 
       <h2 className="text-h2 mt-4">Contact Us</h2>
@@ -47,7 +51,10 @@ export default function PrivacyPolicy() {
         <a className="text-link" href="https://github.com/yeeway0609/artist-2-playlist" target="_blank">
           https://github.com/yeeway0609/artist-2-playlist
         </a>
-        . If you have any questions or concerns about this website, please contact us at{' '}
+        .
+        <br />
+        <br />
+        If you have any questions or concerns about this website, please contact us at{' '}
         <a className="text-link" href="mailto:hi@yeeway.dev" target="_blank">
           hi@yeeway.dev
         </a>
