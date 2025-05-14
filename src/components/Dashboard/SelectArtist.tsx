@@ -49,11 +49,19 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsE
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
+        {/* <div className="w-[200px]">
+          <div className="size-[80px] shrink-0"></div>
+          <div className="flex w-full flex-col">
+            <span>long text</span>
+            <span>long text</span>
+          </div>
+        </div> */}
+
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={clsx('relative h-auto w-full justify-start gap-4 p-3')}
+          className={clsx('flex h-auto w-full justify-start gap-4 p-3')}
         >
           {selectedArtist ? (
             <>
@@ -66,9 +74,9 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsE
                   height={80}
                 />
               ) : (
-                <div className="flex size-20 items-center justify-center bg-muted">NaN</div>
+                <div className="flex size-20 shrink-0 items-center justify-center bg-muted">NaN</div>
               )}
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col overflow-hidden text-left">
                 <span className="truncate text-xl font-semibold">{selectedArtist.name}</span>
                 <span className="truncate">{selectedArtist.followers.total} followers</span>
                 <Link

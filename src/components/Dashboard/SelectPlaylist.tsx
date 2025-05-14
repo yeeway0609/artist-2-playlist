@@ -41,7 +41,7 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={clsx('relative h-auto w-full justify-start gap-4 p-3')}
+          className={clsx('h-auto w-full justify-start gap-4 p-3')}
         >
           {selectedPlaylist ? (
             <>
@@ -54,10 +54,10 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
                   height={80}
                 />
               ) : (
-                <div className="flex size-20 items-center justify-center bg-muted">NaN</div>
+                <div className="flex size-20 shrink-0 items-center justify-center bg-muted">NaN</div>
               )}
-              <div className="flex flex-col">
-                <span className="line-clamp-2 text-wrap text-left text-xl font-semibold">{selectedPlaylist.name}</span>
+              <div className="flex flex-col overflow-hidden text-left">
+                <span className="line-clamp-2 text-wrap text-xl font-semibold">{selectedPlaylist.name}</span>
                 <Link
                   className="mt-1 flex items-center text-xs hover:underline hover:underline-offset-2"
                   href={selectedPlaylist.external_urls.spotify}
@@ -75,7 +75,7 @@ export default function SelectPlaylist({ selectedPlaylist, setSelectedPlaylist }
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <PopoverContent className="w-[300px] p-0">
         <Command>
           <CommandInput placeholder="Search your playlist..." />
           <CommandList>
