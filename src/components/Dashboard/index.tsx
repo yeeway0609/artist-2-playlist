@@ -118,7 +118,19 @@ export default function Dashboard() {
   }
 
   function removeDuplicateTracks(tracks: SimplifiedTrack[]): SimplifiedTrack[] {
-    return tracks.filter((track, index, self) => self.findIndex((t) => t.name === track.name) === index)
+    // EXPLAIN: 保留最後一首重複的歌曲，假如是由舊排到新，則留下最新發行的歌曲
+    const seenNames = new Set()
+    const uniqueTracks: SimplifiedTrack[] = []
+
+    for (let i = tracks.length - 1; i >= 0; i--) {
+      const track = tracks[i]
+      if (!seenNames.has(track.name)) {
+        seenNames.add(track.name)
+        uniqueTracks.unshift(track)
+      }
+    }
+
+    return uniqueTracks
   }
 
   async function startWithExistingPlaylist() {

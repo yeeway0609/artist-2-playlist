@@ -43,7 +43,6 @@ export default function SelectArtist({ selectedArtist, setSelectedArtist, setIsE
 
   function handleSelectArtist(artist: Artist) {
     setSelectedArtist(artist)
-    console.log(artist)
     setOpen(false)
   }
 
