@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://artist-2-playlist.vercel.app',
     title: 'Artist2Playlist for Spotify',
-    description: 'Add every song by any artist to your playlists on Spotif in one click.',
+    description: 'Add every song by any artist to your playlists on Spotify in one click.',
     siteName: 'Artist2Playlist',
     images: [
       {
