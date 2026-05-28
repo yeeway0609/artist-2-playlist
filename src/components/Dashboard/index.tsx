@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
-import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
+import { Artist, SimplifiedPlaylist, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
 import { signOut } from 'next-auth/react'
+import { useMediaQuery } from 'usehooks-ts'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -16,8 +17,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlbumOrder, AlbumType, ProcessingStatus } from '@/lib/enums'
 import {
@@ -27,6 +26,8 @@ import {
   getCurrentUser,
   getTracksFromAlbum,
 } from '@/lib/spotifyServices'
+import { EditableTrack, sortTracksBy } from '@/lib/trackFilters'
+import EditPanel from './EditPanel'
 import SelectArtist from './SelectArtist'
 import SelectPlaylist from './SelectPlaylist'
 
@@ -54,43 +55,68 @@ export default function Dashboard() {
   const [playlistActionType, setPlaylistActionType] = useState<'existing' | 'create'>('existing')
   const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
   const [newPlaylistName, setNewPlaylistName] = useState('')
-  const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
-  const [isRemoveDuplicatesEnabled, setIsRemoveDuplicatesEnabled] = useState(false)
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>(ProcessingStatus.Idle)
   const [processingAlbum, setProcessingAlbum] = useState('')
   const [addedTracksCount, setAddedTracksCount] = useState(0)
-  const isButtonDisabled =
+  const [fetchedCount, setFetchedCount] = useState(0)
+  const [editableTracks, setEditableTracks] = useState<EditableTrack[]>([])
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [previewOrder, setPreviewOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
+
+  const isDesktop = useMediaQuery('(min-width: 1024px)', { initializeWithValue: false })
+  const isFetchDisabled =
     !selectedArtist ||
     (playlistActionType === 'existing' && !selectedPlaylist) ||
     (playlistActionType === 'create' && newPlaylistName.trim() === '') ||
     processingStatus === ProcessingStatus.Processing
 
-  async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
+  async function fetchAndEdit() {
+    if (!selectedArtist) return
+
     try {
-      const tracks: SimplifiedTrack[] = []
-      const albums = await getAlbumsFromArtist(id, includedAlbumTypes.join(','))
-      const sortedAlbums = sortAlbumsByReleaseDate(albums, albumOrder)
+      setFetchedCount(0)
+      setAddedTracksCount(0)
+      setProcessingStatus(ProcessingStatus.Processing)
+      arrowLottieLight?.play()
+      arrowLottieDark?.play()
+
+      const collected: EditableTrack[] = []
+      const albums = await getAlbumsFromArtist(selectedArtist.id, includedAlbumTypes.join(','))
+      const sortedAlbums = sortAlbumsByReleaseDate(albums, previewOrder)
       const BATCH_SIZE = 4
 
       for (let i = 0; i < sortedAlbums.length; i += BATCH_SIZE) {
         const albumBatch = sortedAlbums.slice(i, i + BATCH_SIZE)
-
         await Promise.all(
           albumBatch.map(async (album) => {
             setProcessingAlbum(album.name)
-            const albumTracks = await getTracksFromAlbum(album.id, id)
-            tracks.push(...albumTracks)
-            setAddedTracksCount((prev) => prev + albumTracks.length)
-            return albumTracks
+            const albumTracks = await getTracksFromAlbum(album.id, selectedArtist.id)
+            for (const t of albumTracks) {
+              collected.push({
+                id: t.id,
+                uri: t.uri,
+                name: t.name,
+                albumName: album.name,
+                releaseDate: album.release_date,
+                excluded: false,
+              })
+            }
+            setFetchedCount((prev) => prev + albumTracks.length)
           })
         )
       }
 
-      return tracks
+      arrowLottieLight?.stop()
+      arrowLottieDark?.stop()
+      setProcessingStatus(ProcessingStatus.Idle)
+      setEditableTracks(sortTracksBy(collected, previewOrder))
+      setIsPanelOpen(true)
     } catch (error) {
       setIsError(true)
       console.error('Error occurred while fetching tracks:', error)
-      return []
+      arrowLottieLight?.stop()
+      arrowLottieDark?.stop()
+      setProcessingStatus(ProcessingStatus.Idle)
     }
   }
 
@@ -105,211 +131,172 @@ export default function Dashboard() {
   }
 
   function sortAlbumsByReleaseDate(albums: SimplifiedAlbum[], order: AlbumOrder): SimplifiedAlbum[] {
-    return albums.sort((a, b) => {
+    return [...albums].sort((a, b) => {
       const dateA = new Date(a.release_date).getTime()
       const dateB = new Date(b.release_date).getTime()
-
-      if (order === AlbumOrder.Asc) {
-        return dateA - dateB
-      } else {
-        return dateB - dateA
-      }
+      return order === AlbumOrder.Asc ? dateA - dateB : dateB - dateA
     })
   }
 
-  function removeDuplicateTracks(tracks: SimplifiedTrack[]): SimplifiedTrack[] {
-    // EXPLAIN: 保留最後一首重複的歌曲，假如是由舊排到新，則留下最新發行的歌曲
-    const seenNames = new Set()
-    const uniqueTracks: SimplifiedTrack[] = []
+  async function confirmAddToPlaylist() {
+    if (!selectedArtist) return
 
-    for (let i = tracks.length - 1; i >= 0; i--) {
-      const track = tracks[i]
-      if (!seenNames.has(track.name)) {
-        seenNames.add(track.name)
-        uniqueTracks.unshift(track)
-      }
-    }
+    const tracksToAdd = editableTracks.filter((t) => !t.excluded).map((t) => ({ uri: t.uri }))
 
-    return uniqueTracks
-  }
-
-  async function startWithExistingPlaylist() {
-    if (!selectedArtist || !selectedPlaylist || playlistActionType !== 'existing') return
+    if (tracksToAdd.length === 0) return
 
     try {
-      setAddedTracksCount(0)
       setProcessingStatus(ProcessingStatus.Processing)
       arrowLottieLight?.play()
       arrowLottieDark?.play()
 
-      let tracks = await getAllTracksFromArtist(selectedArtist.id)
-
-      if (isRemoveDuplicatesEnabled) {
-        tracks = removeDuplicateTracks(tracks)
-        setAddedTracksCount(tracks.length)
+      let playlistId: string | null = null
+      if (playlistActionType === 'existing') {
+        playlistId = selectedPlaylist?.id ?? null
+      } else {
+        const user = await getCurrentUser()
+        if (!user) return
+        const newPlaylist = await createPlaylist(user.id, newPlaylistName)
+        if (!newPlaylist) return
+        playlistId = newPlaylist.id
       }
+      if (!playlistId) return
 
-      await addTracksToPlaylist(selectedPlaylist.id, tracks)
+      await addTracksToPlaylist(playlistId, tracksToAdd)
+      setAddedTracksCount(tracksToAdd.length)
 
       arrowLottieLight?.stop()
       arrowLottieDark?.stop()
       setProcessingStatus(ProcessingStatus.Done)
+      setIsPanelOpen(false)
+      setEditableTracks([])
     } catch (error) {
       setIsError(true)
       console.error('Error occurred while adding tracks to playlist:', error)
-    }
-  }
-
-  async function startWithNewPlaylist() {
-    if (!selectedArtist || newPlaylistName.trim() === '' || playlistActionType !== 'create') return
-
-    try {
-      setAddedTracksCount(0)
-      setProcessingStatus(ProcessingStatus.Processing)
-      arrowLottieLight?.play()
-      arrowLottieDark?.play()
-
-      let tracks = await getAllTracksFromArtist(selectedArtist.id)
-
-      if (isRemoveDuplicatesEnabled) {
-        tracks = removeDuplicateTracks(tracks)
-        setAddedTracksCount(tracks.length)
-      }
-
-      const user = await getCurrentUser()
-      if (!user) return
-      const newPlaylist = await createPlaylist(user.id, newPlaylistName)
-      if (!newPlaylist) return
-      await addTracksToPlaylist(newPlaylist.id, tracks)
-
       arrowLottieLight?.stop()
       arrowLottieDark?.stop()
-      setProcessingStatus(ProcessingStatus.Done)
-    } catch (error) {
-      setIsError(true)
-      console.error('Error occurred while adding tracks to playlist:', error)
     }
   }
 
   return (
-    <div className="w-full max-w-[300px] pb-20 pt-10">
-      <section>
-        <h2 className="text-h2 mb-2">Artist</h2>
-        <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} setIsError={setIsError} />
+    <div className="w-full pb-20 pt-10 lg:grid lg:grid-cols-2 lg:gap-8">
+      <div className="mx-auto w-full max-w-[300px] lg:mx-0 lg:max-w-none">
+        <section>
+          <h2 className="text-h2 mb-2">Artist</h2>
+          <SelectArtist selectedArtist={selectedArtist} setSelectedArtist={setSelectedArtist} setIsError={setIsError} />
 
-        <h3 className="mb-2 mt-3 font-medium">Included album types</h3>
-        <div className="flex flex-wrap gap-y-3">
-          {Object.values(AlbumType).map((type) => (
-            <div className="flex w-1/2 items-center gap-x-2" key={type}>
-              <Checkbox
-                className="size-[18px]"
-                id={type}
-                checked={includedAlbumTypes.includes(type)}
-                onCheckedChange={() => handleAlbumTypesChange(type)}
-              />
-              <Label htmlFor={type}>{albumTypeLabels[type]}</Label>
-            </div>
-          ))}
-        </div>
-      </section>
+          <h3 className="mb-2 mt-3 font-medium">Included album types</h3>
+          <div className="flex flex-wrap gap-y-3">
+            {Object.values(AlbumType).map((type) => (
+              <div className="flex w-1/2 items-center gap-x-2" key={type}>
+                <Checkbox
+                  className="size-[18px]"
+                  id={type}
+                  checked={includedAlbumTypes.includes(type)}
+                  onCheckedChange={() => handleAlbumTypesChange(type)}
+                />
+                <Label htmlFor={type}>{albumTypeLabels[type]}</Label>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      <div className="relative mx-auto mb-2 mt-3 h-20 w-[130px]">
-        <div className="absolute">
-          <DotLottieWorkerReact
-            className="visible dark:invisible"
-            src={LOTTIE_URL_BLACK}
-            dotLottieRefCallback={setArrowLottieLight}
-            loop
-            width={130}
-            height={80}
-          />
-        </div>
-        <div className="absolute">
-          <DotLottieWorkerReact
-            className="invisible dark:visible"
-            src={LOTTIE_URL_WHITE}
-            dotLottieRefCallback={setArrowLottieDark}
-            loop
-            width={130}
-            height={80}
-          />
-        </div>
-      </div>
-
-      <section className="mb-6">
-        <h2 className="text-h2 mb-2">Your Playlist</h2>
-        <Tabs defaultValue="existing" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="existing" onClick={() => setPlaylistActionType('existing')}>
-              Existing one
-            </TabsTrigger>
-            <TabsTrigger value="create" onClick={() => setPlaylistActionType('create')}>
-              Create a new one
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="existing">
-            <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
-          </TabsContent>
-          <TabsContent value="create">
-            <Input
-              className="h-[62px] text-sm"
-              placeholder="Enter playlist name..."
-              value={newPlaylistName || ''}
-              onChange={(e) => setNewPlaylistName(e.target.value)}
+        <div className="relative mx-auto mb-2 mt-3 h-20 w-[130px]">
+          <div className="absolute">
+            <DotLottieWorkerReact
+              className="visible dark:invisible"
+              src={LOTTIE_URL_BLACK}
+              dotLottieRefCallback={setArrowLottieLight}
+              loop
+              width={130}
+              height={80}
             />
-          </TabsContent>
-        </Tabs>
-
-        <h3 className="mb-2 mt-3 font-medium">Order of songs</h3>
-        <RadioGroup className="gap-3" value={albumOrder} onValueChange={(value) => setAlbumOrder(value as AlbumOrder)}>
-          <div className="flex items-center gap-x-2">
-            <RadioGroupItem value={AlbumOrder.Asc} id={AlbumOrder.Asc} />
-            <Label htmlFor={AlbumOrder.Asc} className={albumOrder === AlbumOrder.Asc ? '' : 'text-muted-foreground'}>
-              Oldest &#8594; Latest
-            </Label>
           </div>
-          <div className="flex items-center gap-x-2">
-            <RadioGroupItem value={AlbumOrder.Desc} id={AlbumOrder.Desc} />
-            <Label htmlFor={AlbumOrder.Desc} className={albumOrder === AlbumOrder.Desc ? '' : 'text-muted-foreground'}>
-              Latest &#8594; Oldest
-            </Label>
+          <div className="absolute">
+            <DotLottieWorkerReact
+              className="invisible dark:visible"
+              src={LOTTIE_URL_WHITE}
+              dotLottieRefCallback={setArrowLottieDark}
+              loop
+              width={130}
+              height={80}
+            />
           </div>
-        </RadioGroup>
-
-        <h3 className="mb-2 mt-3 font-medium">Duplicate songs</h3>
-        <div className="flex items-center gap-x-2">
-          <Switch
-            id="remove-duplicate"
-            checked={isRemoveDuplicatesEnabled}
-            onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
-          />
-          <Label htmlFor="remove-duplicate" className={isRemoveDuplicatesEnabled ? '' : 'text-muted-foreground'}>
-            Remove songs with duplicate titles
-          </Label>
         </div>
-      </section>
 
-      {processingStatus === ProcessingStatus.Processing && (
-        <p className="h-10 truncate text-sm text-primary">
-          Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
-        </p>
-      )}
+        <section className="mb-6">
+          <h2 className="text-h2 mb-2">Your Playlist</h2>
+          <Tabs defaultValue="existing" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="existing" onClick={() => setPlaylistActionType('existing')}>
+                Existing one
+              </TabsTrigger>
+              <TabsTrigger value="create" onClick={() => setPlaylistActionType('create')}>
+                Create a new one
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="existing">
+              <SelectPlaylist selectedPlaylist={selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist} />
+            </TabsContent>
+            <TabsContent value="create">
+              <Input
+                className="h-[62px] text-sm"
+                placeholder="Enter playlist name..."
+                value={newPlaylistName || ''}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+              />
+            </TabsContent>
+          </Tabs>
+        </section>
 
-      {processingStatus === ProcessingStatus.Done && (
-        <p className="h-10 text-sm text-primary">
-          🎉 Process completed! Added <span className="font-semibold">{addedTracksCount} </span>tracks.
-        </p>
-      )}
+        {processingStatus === ProcessingStatus.Processing && !isPanelOpen && (
+          <p className="h-10 truncate text-sm text-primary">
+            Fetching from &quot;<span className="font-medium">{processingAlbum}</span>&quot;... ({fetchedCount})
+          </p>
+        )}
 
-      <div className="mt-4 flex justify-center">
-        <Button
-          className="mx-auto"
-          disabled={isButtonDisabled}
-          onClick={playlistActionType === 'existing' ? startWithExistingPlaylist : startWithNewPlaylist}
-        >
-          Start
-        </Button>
+        {processingStatus === ProcessingStatus.Done && (
+          <p className="h-10 text-sm text-primary">
+            🎉 Process completed! Added <span className="font-semibold">{addedTracksCount} </span>tracks.
+          </p>
+        )}
+
+        <div className="mt-4 flex justify-center">
+          <Button className="mx-auto" disabled={isFetchDisabled} onClick={fetchAndEdit}>
+            Fetch Tracks
+          </Button>
+        </div>
       </div>
+
+      <div className="hidden lg:block">
+        {isPanelOpen && isDesktop && (
+          <EditPanel
+            open={isPanelOpen}
+            onOpenChange={setIsPanelOpen}
+            variant="inline"
+            tracks={editableTracks}
+            setTracks={setEditableTracks}
+            previewOrder={previewOrder}
+            setPreviewOrder={setPreviewOrder}
+            onConfirm={confirmAddToPlaylist}
+            processingStatus={processingStatus}
+          />
+        )}
+      </div>
+
+      {!isDesktop && isPanelOpen && (
+        <EditPanel
+          open={isPanelOpen}
+          onOpenChange={setIsPanelOpen}
+          variant="dialog"
+          tracks={editableTracks}
+          setTracks={setEditableTracks}
+          previewOrder={previewOrder}
+          setPreviewOrder={setPreviewOrder}
+          onConfirm={confirmAddToPlaylist}
+          processingStatus={processingStatus}
+        />
+      )}
 
       <Dialog open={isError}>
         <DialogContent className="max-w-[250px] rounded outline-none [&>button]:hidden">
