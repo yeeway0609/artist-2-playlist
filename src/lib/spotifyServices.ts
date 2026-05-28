@@ -3,6 +3,8 @@
 import { SimplifiedAlbum, SimplifiedPlaylist, SimplifiedTrack } from '@spotify/web-api-ts-sdk'
 import sdk from '@/lib/spotifySdk'
 
+type TrackUriLike = { uri: string }
+
 export async function getCurrentUser() {
   try {
     const response = await sdk.currentUser.profile()
@@ -95,7 +97,7 @@ export async function getTracksFromAlbum(albumID: string, artistId?: string): Pr
   }
 }
 
-export async function addTracksToPlaylist(playlistId: string, tracks: SimplifiedTrack[]) {
+export async function addTracksToPlaylist(playlistId: string, tracks: TrackUriLike[]) {
   const BATCH_SIZE = 100 // EXPLAIN: Spotify API limit
   const tracksUri = tracks.map((track) => track.uri)
 
