@@ -6,9 +6,10 @@ export default function Footer() {
     <div className="mt-auto flex w-full justify-center border-t border-border">
       <footer className="flex w-full max-w-screen-sm flex-col p-6">
         <div className="flex justify-center gap-5 text-sm">
+          <Link href="/how-to-use">How to use</Link>
           <Link href="/privacy-policy">Privacy policy</Link>
-          <Link href="https://forms.gle/wgGBjkw9CL7ahypK7" target="_blank">
-            <span className="mr-1">Feedback form</span>
+          <Link href="https://github.com/yeeway0609/artist-2-playlist" target="_blank">
+            <span className="mr-1">GitHub repo</span>
             <ArrowUpRightIcon />
           </Link>
         </div>
