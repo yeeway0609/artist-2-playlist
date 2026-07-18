@@ -26,26 +26,28 @@ const authOptions: AuthOptions = {
   },
   callbacks: {
     async jwt({ token, account }: { token: JWT; account: Account | null }) {
-      if (!account) {
+      // Initial sign-in: persist the tokens Spotify returned on the account.
+      if (account) {
+        return {
+          ...token,
+          access_token: account.access_token,
+          token_type: account.token_type,
+          expires_at: account.expires_at ?? Date.now() / 1000,
+          expires_in: (account.expires_at ?? 0) - Date.now() / 1000,
+          refresh_token: account.refresh_token,
+          scope: account.scope,
+          id: account.providerAccountId,
+        }
+      }
+
+      // Subsequent calls: reuse the token while the access token is still valid.
+      // expires_at is Unix seconds, Date.now() is milliseconds.
+      if (typeof token.expires_at === 'number' && Date.now() < token.expires_at * 1000) {
         return token
       }
 
-      const updatedToken = {
-        ...token,
-        access_token: account?.access_token,
-        token_type: account?.token_type,
-        expires_at: account?.expires_at ?? Date.now() / 1000,
-        expires_in: (account?.expires_at ?? 0) - Date.now() / 1000,
-        refresh_token: account?.refresh_token,
-        scope: account?.scope,
-        id: account?.providerAccountId,
-      }
-
-      if (Date.now() < updatedToken.expires_at) {
-        return refreshAccessToken(updatedToken)
-      }
-
-      return updatedToken
+      // Access token expired: refresh it (or flag re-auth if the refresh fails).
+      return refreshAccessToken(token)
     },
     async session({ session, token }: { session: any; token: JWT }) {
       const user: AuthUser = {
