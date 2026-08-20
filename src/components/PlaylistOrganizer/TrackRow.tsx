@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
 import { ChevronDown, ChevronUp, GripVertical, Minus, Plus } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { OrganizerItem } from '@/lib/types'
 
@@ -44,7 +45,14 @@ function TrackRow({ item, isFirst, isLast, onToggleExclude, onMove }: TrackRowPr
           <div className="size-10 shrink-0 rounded bg-muted" />
         )}
         <div className="min-w-0">
-          <p className={clsx('truncate text-sm font-medium', item.excluded && 'line-through')}>{track.name}</p>
+          <div className="flex items-center gap-1.5">
+            <p className={clsx('truncate text-sm font-medium', item.excluded && 'line-through')}>{track.name}</p>
+            {item.isExisting && (
+              <Badge variant="secondary" className="shrink-0 px-1 py-0 text-[10px] font-normal">
+                In playlist
+              </Badge>
+            )}
+          </div>
           <p className="truncate text-xs text-muted-foreground">
             {track.album.name} · {track.album.release_date}
           </p>

@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { OrganizerMode } from '@/lib/enums'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { MatchStrategy, OrganizerMode } from '@/lib/enums'
 import { OrganizerItem, TrackWithAlbum } from '@/lib/types'
 import FilterBar from './FilterBar'
 import SortMenu from './SortMenu'
@@ -26,6 +28,9 @@ type PlaylistOrganizerProps = {
   mode: OrganizerMode
   playlistName: string
   initialItems: OrganizerItem[]
+  // EXPLAIN: upsert 模式用來切換比對策略時重算 isExisting
+  existingIds?: Set<string>
+  existingNames?: Set<string>
   onSave: (finalTracks: TrackWithAlbum[]) => Promise<void>
 }
 
@@ -35,9 +40,13 @@ export default function PlaylistOrganizer({
   mode,
   playlistName,
   initialItems,
+  existingIds,
+  existingNames,
   onSave,
 }: PlaylistOrganizerProps) {
   const [isSaving, setIsSaving] = useState(false)
+  const [matchStrategy, setMatchStrategy] = useState<MatchStrategy>(MatchStrategy.ById)
+  const [showOnlyNew, setShowOnlyNew] = useState(false)
   const {
     items,
     includedCount,
@@ -47,9 +56,33 @@ export default function PlaylistOrganizer({
     toggleExclude,
     excludeDuplicates,
     restoreAll,
+    applyIsExisting,
     sortBy,
   } = useOrganizerItems(initialItems)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const visibleItems = showOnlyNew ? items.filter((item) => !item.isExisting) : items
+
+  // EXPLAIN: 過濾「只顯示新歌」時，上下移要以可見清單的鄰居為目標，否則會與隱藏的項目交換而看起來沒動
+  const handleMove = useCallback(
+    (key: string, direction: -1 | 1) => {
+      if (!showOnlyNew) return moveItem(key, direction)
+
+      const visible = items.filter((item) => !item.isExisting)
+      const index = visible.findIndex((item) => item.key === key)
+      const neighbor = visible[index + direction]
+      if (neighbor) reorder(key, neighbor.key)
+    },
+    [showOnlyNew, items, moveItem, reorder]
+  )
+
+  function handleMatchStrategyChange(strategy: MatchStrategy) {
+    setMatchStrategy(strategy)
+    applyIsExisting((item) =>
+      strategy === MatchStrategy.ById
+        ? (existingIds?.has(item.track.id) ?? false)
+        : (existingNames?.has(item.track.name) ?? false)
+    )
+  }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -77,7 +110,33 @@ export default function PlaylistOrganizer({
           <DialogTitle className="truncate pr-8 text-base">{playlistName}</DialogTitle>
           <DialogDescription className="text-xs">
             {includedCount} of {items.length} songs selected
+            {mode === OrganizerMode.Upsert && ` · ${items.filter((item) => !item.isExisting).length} new`}
           </DialogDescription>
+
+          {mode === OrganizerMode.Upsert && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground">Match by</span>
+                {Object.values(MatchStrategy).map((strategy) => (
+                  <Button
+                    key={strategy}
+                    variant={matchStrategy === strategy ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => handleMatchStrategyChange(strategy)}
+                  >
+                    {strategy === MatchStrategy.ById ? 'Track ID' : 'Title'}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Switch id="show-only-new" className="scale-75" checked={showOnlyNew} onCheckedChange={setShowOnlyNew} />
+                <Label htmlFor="show-only-new" className="text-xs">
+                  New songs only
+                </Label>
+              </div>
+            </div>
+          )}
           <FilterBar
             onExcludeDuplicates={() => {
               const count = excludeDuplicates()
@@ -89,16 +148,16 @@ export default function PlaylistOrganizer({
         </DialogHeader>
 
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={items.map((item) => item.key)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={visibleItems.map((item) => item.key)} strategy={verticalListSortingStrategy}>
             <ul className="flex-1 overflow-y-auto overscroll-contain px-3">
-              {items.map((item, index) => (
+              {visibleItems.map((item, index) => (
                 <TrackRow
                   key={item.key}
                   item={item}
                   isFirst={index === 0}
-                  isLast={index === items.length - 1}
+                  isLast={index === visibleItems.length - 1}
                   onToggleExclude={toggleExclude}
-                  onMove={moveItem}
+                  onMove={handleMove}
                 />
               ))}
             </ul>

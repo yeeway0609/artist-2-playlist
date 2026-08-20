@@ -57,6 +57,21 @@ export function useOrganizerItems(initialItems: OrganizerItem[]) {
     setItems((prev) => prev.map((item) => ({ ...item, excluded: item.isExisting })))
   }
 
+  // EXPLAIN: upsert 模式切換比對策略（track id / 歌名）時重算 isExisting；
+  // 原本因「已存在」被排除、現在不算已存在的歌自動復原，使用者手動排除的則保留
+  function applyIsExisting(isExisting: (item: OrganizerItem) => boolean) {
+    setItems((prev) =>
+      prev.map((item) => {
+        const nextIsExisting = isExisting(item)
+        return {
+          ...item,
+          isExisting: nextIsExisting,
+          excluded: nextIsExisting || (item.excluded && !item.isExisting),
+        }
+      })
+    )
+  }
+
   function sortBy(key: TrackSortKey) {
     setSortKey(key)
     if (key === TrackSortKey.Custom) return
@@ -79,6 +94,7 @@ export function useOrganizerItems(initialItems: OrganizerItem[]) {
     toggleExclude,
     excludeDuplicates,
     restoreAll,
+    applyIsExisting,
     sortBy,
   }
 }

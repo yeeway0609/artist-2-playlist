@@ -22,7 +22,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlbumOrder, AlbumType, OrganizerMode, ProcessingStatus } from '@/lib/enums'
 import { createOrganizerItem } from '@/lib/organizerItem'
-import { addTracksToPlaylist, createPlaylist, getCurrentUser } from '@/lib/spotifyServices'
+import { addTracksToPlaylist, createPlaylist, getCurrentUser, getPlaylistItems } from '@/lib/spotifyServices'
 import { OrganizerItem, TrackWithAlbum } from '@/lib/types'
 import SelectArtist from './SelectArtist'
 import SelectPlaylist from './SelectPlaylist'
@@ -33,6 +33,8 @@ type OrganizerSession = {
   items: OrganizerItem[]
   playlistName: string
   targetPlaylistId?: string
+  existingIds?: Set<string>
+  existingNames?: Set<string>
 }
 
 const albumTypeLabels = {
@@ -94,20 +96,27 @@ export default function Dashboard() {
 
       const tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
 
-      setOrganizerSession(
-        playlistActionType === 'create'
-          ? {
-              mode: OrganizerMode.Create,
-              items: tracks.map((track) => createOrganizerItem(track)),
-              playlistName: newPlaylistName,
-            }
-          : {
-              mode: OrganizerMode.Upsert,
-              items: tracks.map((track) => createOrganizerItem(track)),
-              playlistName: selectedPlaylist!.name,
-              targetPlaylistId: selectedPlaylist!.id,
-            }
-      )
+      if (playlistActionType === 'create') {
+        setOrganizerSession({
+          mode: OrganizerMode.Create,
+          items: tracks.map((track) => createOrganizerItem(track)),
+          playlistName: newPlaylistName,
+        })
+      } else {
+        // EXPLAIN: upsert——先抓目標歌單現有曲目，已存在的歌預設排除，儲存時只 append 新歌
+        const existingItems = await getPlaylistItems(selectedPlaylist!.id)
+        const existingIds = new Set(existingItems.map((item) => item.track?.id).filter(Boolean) as string[])
+        const existingNames = new Set(existingItems.map((item) => item.track?.name).filter(Boolean) as string[])
+
+        setOrganizerSession({
+          mode: OrganizerMode.Upsert,
+          items: tracks.map((track) => createOrganizerItem(track, existingIds.has(track.id))),
+          playlistName: selectedPlaylist!.name,
+          targetPlaylistId: selectedPlaylist!.id,
+          existingIds,
+          existingNames,
+        })
+      }
     } catch (error) {
       setIsError(true)
       console.error('Error occurred while fetching tracks:', error)
@@ -261,6 +270,8 @@ export default function Dashboard() {
           mode={organizerSession.mode}
           playlistName={organizerSession.playlistName}
           initialItems={organizerSession.items}
+          existingIds={organizerSession.existingIds}
+          existingNames={organizerSession.existingNames}
           onSave={handleOrganizerSave}
         />
       )}
