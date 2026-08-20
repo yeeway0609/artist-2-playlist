@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
-import { Artist, SimplifiedPlaylist, SimplifiedTrack, SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
+import { Artist, SimplifiedPlaylist } from '@spotify/web-api-ts-sdk'
 import { signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -20,15 +20,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlbumOrder, AlbumType, ProcessingStatus } from '@/lib/enums'
-import {
-  addTracksToPlaylist,
-  createPlaylist,
-  getAlbumsFromArtist,
-  getCurrentUser,
-  getTracksFromAlbum,
-} from '@/lib/spotifyServices'
+import { addTracksToPlaylist, createPlaylist, getCurrentUser } from '@/lib/spotifyServices'
+import { removeDuplicateTracks } from '@/lib/trackFilters'
 import SelectArtist from './SelectArtist'
 import SelectPlaylist from './SelectPlaylist'
+import { useArtistTracks } from './useArtistTracks'
 
 const albumTypeLabels = {
   [AlbumType.Album]: 'Album',
@@ -57,42 +53,13 @@ export default function Dashboard() {
   const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
   const [isRemoveDuplicatesEnabled, setIsRemoveDuplicatesEnabled] = useState(false)
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>(ProcessingStatus.Idle)
-  const [processingAlbum, setProcessingAlbum] = useState('')
   const [addedTracksCount, setAddedTracksCount] = useState(0)
+  const { fetchArtistTracks, processingAlbum } = useArtistTracks()
   const isButtonDisabled =
     !selectedArtist ||
     (playlistActionType === 'existing' && !selectedPlaylist) ||
     (playlistActionType === 'create' && newPlaylistName.trim() === '') ||
     processingStatus === ProcessingStatus.Processing
-
-  async function getAllTracksFromArtist(id: string): Promise<SimplifiedTrack[]> {
-    try {
-      const tracks: SimplifiedTrack[] = []
-      const albums = await getAlbumsFromArtist(id, includedAlbumTypes.join(','))
-      const sortedAlbums = sortAlbumsByReleaseDate(albums, albumOrder)
-      const BATCH_SIZE = 4
-
-      for (let i = 0; i < sortedAlbums.length; i += BATCH_SIZE) {
-        const albumBatch = sortedAlbums.slice(i, i + BATCH_SIZE)
-
-        await Promise.all(
-          albumBatch.map(async (album) => {
-            setProcessingAlbum(album.name)
-            const albumTracks = await getTracksFromAlbum(album.id, id)
-            tracks.push(...albumTracks)
-            setAddedTracksCount((prev) => prev + albumTracks.length)
-            return albumTracks
-          })
-        )
-      }
-
-      return tracks
-    } catch (error) {
-      setIsError(true)
-      console.error('Error occurred while fetching tracks:', error)
-      return []
-    }
-  }
 
   function handleAlbumTypesChange(value: AlbumType) {
     if (includedAlbumTypes.length === 1 && includedAlbumTypes.includes(value)) return
@@ -104,35 +71,6 @@ export default function Dashboard() {
     }
   }
 
-  function sortAlbumsByReleaseDate(albums: SimplifiedAlbum[], order: AlbumOrder): SimplifiedAlbum[] {
-    return albums.sort((a, b) => {
-      const dateA = new Date(a.release_date).getTime()
-      const dateB = new Date(b.release_date).getTime()
-
-      if (order === AlbumOrder.Asc) {
-        return dateA - dateB
-      } else {
-        return dateB - dateA
-      }
-    })
-  }
-
-  function removeDuplicateTracks(tracks: SimplifiedTrack[]): SimplifiedTrack[] {
-    // EXPLAIN: 保留最後一首重複的歌曲，假如是由舊排到新，則留下最新發行的歌曲
-    const seenNames = new Set()
-    const uniqueTracks: SimplifiedTrack[] = []
-
-    for (let i = tracks.length - 1; i >= 0; i--) {
-      const track = tracks[i]
-      if (!seenNames.has(track.name)) {
-        seenNames.add(track.name)
-        uniqueTracks.unshift(track)
-      }
-    }
-
-    return uniqueTracks
-  }
-
   async function startWithExistingPlaylist() {
     if (!selectedArtist || !selectedPlaylist || playlistActionType !== 'existing') return
 
@@ -142,12 +80,12 @@ export default function Dashboard() {
       arrowLottieLight?.play()
       arrowLottieDark?.play()
 
-      let tracks = await getAllTracksFromArtist(selectedArtist.id)
+      let tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
 
       if (isRemoveDuplicatesEnabled) {
         tracks = removeDuplicateTracks(tracks)
-        setAddedTracksCount(tracks.length)
       }
+      setAddedTracksCount(tracks.length)
 
       await addTracksToPlaylist(selectedPlaylist.id, tracks)
 
@@ -169,12 +107,12 @@ export default function Dashboard() {
       arrowLottieLight?.play()
       arrowLottieDark?.play()
 
-      let tracks = await getAllTracksFromArtist(selectedArtist.id)
+      let tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
 
       if (isRemoveDuplicatesEnabled) {
         tracks = removeDuplicateTracks(tracks)
-        setAddedTracksCount(tracks.length)
       }
+      setAddedTracksCount(tracks.length)
 
       const user = await getCurrentUser()
       if (!user) return
