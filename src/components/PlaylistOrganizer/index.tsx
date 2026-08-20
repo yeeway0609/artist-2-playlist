@@ -31,6 +31,9 @@ type PlaylistOrganizerProps = {
   // EXPLAIN: upsert 模式用來切換比對策略時重算 isExisting
   existingIds?: Set<string>
   existingNames?: Set<string>
+  // EXPLAIN: edit 模式：歌單中無法透過 API 編輯的項目數（local files / episodes），大於 0 時禁止儲存，
+  // 因為整份覆寫會把它們永久移除且加不回來
+  uneditableCount?: number
   onSave: (finalTracks: TrackWithAlbum[]) => Promise<void>
 }
 
@@ -42,6 +45,7 @@ export default function PlaylistOrganizer({
   initialItems,
   existingIds,
   existingNames,
+  uneditableCount = 0,
   onSave,
 }: PlaylistOrganizerProps) {
   const [isSaving, setIsSaving] = useState(false)
@@ -111,7 +115,15 @@ export default function PlaylistOrganizer({
           <DialogDescription className="text-xs">
             {includedCount} of {items.length} songs selected
             {mode === OrganizerMode.Upsert && ` · ${items.filter((item) => !item.isExisting).length} new`}
+            {mode === OrganizerMode.Edit && ' · Saving overwrites the playlist with this exact list'}
           </DialogDescription>
+
+          {mode === OrganizerMode.Edit && uneditableCount > 0 && (
+            <p className="rounded bg-destructive/10 px-2 py-1.5 text-xs text-destructive">
+              This playlist contains {uneditableCount} local files or episodes that can&apos;t be edited through the
+              Spotify API. Saving would remove them permanently, so saving is disabled.
+            </p>
+          )}
 
           {mode === OrganizerMode.Upsert && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
@@ -168,7 +180,7 @@ export default function PlaylistOrganizer({
           <Button variant="outline" disabled={isSaving} onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button disabled={isSaving || includedCount === 0} onClick={handleSave}>
+          <Button disabled={isSaving || includedCount === 0 || uneditableCount > 0} onClick={handleSave}>
             {isSaving && <Loader2 className="animate-spin" />}
             {saveLabels[mode](includedCount)}
           </Button>

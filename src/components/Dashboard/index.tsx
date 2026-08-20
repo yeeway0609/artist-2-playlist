@@ -22,8 +22,17 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlbumOrder, AlbumType, OrganizerMode, ProcessingStatus } from '@/lib/enums'
 import { createOrganizerItem } from '@/lib/organizerItem'
-import { addTracksToPlaylist, createPlaylist, getCurrentUser, getPlaylistItems } from '@/lib/spotifyServices'
+import {
+  addTracksToPlaylist,
+  createPlaylist,
+  getCurrentUser,
+  getPlaylistItems,
+  getPlaylistSnapshotId,
+  replacePlaylistItems,
+} from '@/lib/spotifyServices'
+import { fromPlaylistedTrack } from '@/lib/tracks'
 import { OrganizerItem, TrackWithAlbum } from '@/lib/types'
+import MyPlaylists from './MyPlaylists'
 import SelectArtist from './SelectArtist'
 import SelectPlaylist from './SelectPlaylist'
 import { useArtistTracks } from './useArtistTracks'
@@ -35,6 +44,8 @@ type OrganizerSession = {
   targetPlaylistId?: string
   existingIds?: Set<string>
   existingNames?: Set<string>
+  uneditableCount?: number
+  snapshotId?: string
 }
 
 const albumTypeLabels = {
@@ -127,11 +138,59 @@ export default function Dashboard() {
     }
   }
 
+  // EXPLAIN: 純編輯模式——載入歌單曲目，local files / episodes 無法透過 API 編輯，
+  // 過濾後以 uneditableCount 告知 organizer（大於 0 時擋儲存）
+  async function handleEditPlaylist(playlist: SimplifiedPlaylist) {
+    try {
+      const [playlistedItems, snapshotId] = await Promise.all([
+        getPlaylistItems(playlist.id),
+        getPlaylistSnapshotId(playlist.id),
+      ])
+      const editableTracks = playlistedItems.map(fromPlaylistedTrack).filter((track) => track !== null)
+
+      setOrganizerSession({
+        mode: OrganizerMode.Edit,
+        items: editableTracks.map((track) => createOrganizerItem(track)),
+        playlistName: playlist.name,
+        targetPlaylistId: playlist.id,
+        uneditableCount: playlistedItems.length - editableTracks.length,
+        snapshotId,
+      })
+    } catch (error) {
+      setIsError(true)
+      console.error('Error occurred while fetching playlist items:', error)
+    }
+  }
+
   async function handleOrganizerSave(finalTracks: TrackWithAlbum[]) {
     if (!organizerSession) return
 
     try {
       setProcessingStatus(ProcessingStatus.Saving)
+
+      if (organizerSession.mode === OrganizerMode.Edit) {
+        if (!organizerSession.targetPlaylistId) return
+
+        // EXPLAIN: 開啟 organizer 後歌單可能在 Spotify app 被改過，整份覆寫會蓋掉那些變更，先確認
+        const currentSnapshotId = await getPlaylistSnapshotId(organizerSession.targetPlaylistId)
+        if (
+          currentSnapshotId !== organizerSession.snapshotId &&
+          !window.confirm('This playlist changed on Spotify after you opened it. Save anyway and overwrite those changes?')
+        ) {
+          setProcessingStatus(ProcessingStatus.Idle)
+          return
+        }
+
+        await replacePlaylistItems(
+          organizerSession.targetPlaylistId,
+          finalTracks.map((track) => track.uri)
+        )
+
+        setProcessingStatus(ProcessingStatus.Idle)
+        setOrganizerSession(null)
+        toast.success(`Updated "${organizerSession.playlistName}" (${finalTracks.length} songs)`)
+        return
+      }
 
       if (organizerSession.mode === OrganizerMode.Create) {
         const user = await getCurrentUser()
@@ -261,6 +320,8 @@ export default function Dashboard() {
         </Button>
       </div>
 
+      <MyPlaylists onSelect={handleEditPlaylist} onError={() => setIsError(true)} />
+
       {organizerSession && (
         <PlaylistOrganizer
           open
@@ -272,6 +333,7 @@ export default function Dashboard() {
           initialItems={organizerSession.items}
           existingIds={organizerSession.existingIds}
           existingNames={organizerSession.existingNames}
+          uneditableCount={organizerSession.uneditableCount}
           onSave={handleOrganizerSave}
         />
       )}

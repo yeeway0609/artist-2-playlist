@@ -164,6 +164,16 @@ export async function getPlaylistItems(playlistId: string): Promise<PlaylistedTr
   }
 }
 
+// EXPLAIN: 儲存前比對 snapshot_id，避免靜默覆蓋使用者同時在 Spotify app 做的修改
+export async function getPlaylistSnapshotId(playlistId: string): Promise<string> {
+  try {
+    const response = await withRetry(() => sdk.playlists.getPlaylist(playlistId, undefined, 'snapshot_id'))
+    return response.snapshot_id
+  } catch (error) {
+    throw error
+  }
+}
+
 export async function replacePlaylistItems(playlistId: string, uris: string[]) {
   const BATCH_SIZE = 100 // EXPLAIN: Spotify API limit
 
