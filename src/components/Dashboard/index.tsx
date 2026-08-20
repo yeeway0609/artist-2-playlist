@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { DotLottieWorker, DotLottieWorkerReact } from '@lottiefiles/dotlottie-react'
 import { Artist, SimplifiedPlaylist } from '@spotify/web-api-ts-sdk'
 import { signOut } from 'next-auth/react'
+import { toast } from 'sonner'
+import PlaylistOrganizer from '@/components/PlaylistOrganizer'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -18,11 +20,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AlbumOrder, AlbumType, ProcessingStatus } from '@/lib/enums'
+import { AlbumOrder, AlbumType, OrganizerMode, ProcessingStatus } from '@/lib/enums'
+import { createOrganizerItem } from '@/lib/organizerItem'
 import { addTracksToPlaylist, createPlaylist, getCurrentUser } from '@/lib/spotifyServices'
+import { OrganizerItem, TrackWithAlbum } from '@/lib/types'
 import SelectArtist from './SelectArtist'
 import SelectPlaylist from './SelectPlaylist'
 import { useArtistTracks } from './useArtistTracks'
+
+type OrganizerSession = {
+  mode: OrganizerMode
+  items: OrganizerItem[]
+  playlistName: string
+  targetPlaylistId?: string
+}
 
 const albumTypeLabels = {
   [AlbumType.Album]: 'Album',
@@ -49,6 +60,7 @@ export default function Dashboard() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
+  const [organizerSession, setOrganizerSession] = useState<OrganizerSession | null>(null)
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>(ProcessingStatus.Idle)
   const [addedTracksCount, setAddedTracksCount] = useState(0)
   const { fetchArtistTracks, processingAlbum } = useArtistTracks()
@@ -68,8 +80,11 @@ export default function Dashboard() {
     }
   }
 
-  async function startWithExistingPlaylist() {
-    if (!selectedArtist || !selectedPlaylist || playlistActionType !== 'existing') return
+  // EXPLAIN: 抓完歌先開 organizer 預覽/編輯，按下儲存才真正寫入 Spotify
+  async function handleStart() {
+    if (!selectedArtist) return
+    if (playlistActionType === 'existing' && !selectedPlaylist) return
+    if (playlistActionType === 'create' && newPlaylistName.trim() === '') return
 
     try {
       setAddedTracksCount(0)
@@ -78,41 +93,55 @@ export default function Dashboard() {
       arrowLottieDark?.play()
 
       const tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
-      setAddedTracksCount(tracks.length)
 
-      await addTracksToPlaylist(selectedPlaylist.id, tracks)
-
-      arrowLottieLight?.stop()
-      arrowLottieDark?.stop()
-      setProcessingStatus(ProcessingStatus.Done)
+      setOrganizerSession(
+        playlistActionType === 'create'
+          ? {
+              mode: OrganizerMode.Create,
+              items: tracks.map((track) => createOrganizerItem(track)),
+              playlistName: newPlaylistName,
+            }
+          : {
+              mode: OrganizerMode.Upsert,
+              items: tracks.map((track) => createOrganizerItem(track)),
+              playlistName: selectedPlaylist!.name,
+              targetPlaylistId: selectedPlaylist!.id,
+            }
+      )
     } catch (error) {
       setIsError(true)
-      console.error('Error occurred while adding tracks to playlist:', error)
+      console.error('Error occurred while fetching tracks:', error)
+    } finally {
+      arrowLottieLight?.stop()
+      arrowLottieDark?.stop()
+      setProcessingStatus(ProcessingStatus.Idle)
     }
   }
 
-  async function startWithNewPlaylist() {
-    if (!selectedArtist || newPlaylistName.trim() === '' || playlistActionType !== 'create') return
+  async function handleOrganizerSave(finalTracks: TrackWithAlbum[]) {
+    if (!organizerSession) return
 
     try {
-      setAddedTracksCount(0)
-      setProcessingStatus(ProcessingStatus.Processing)
-      arrowLottieLight?.play()
-      arrowLottieDark?.play()
+      setProcessingStatus(ProcessingStatus.Saving)
 
-      const tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
-      setAddedTracksCount(tracks.length)
+      if (organizerSession.mode === OrganizerMode.Create) {
+        const user = await getCurrentUser()
+        if (!user) return
+        const newPlaylist = await createPlaylist(user.id, organizerSession.playlistName)
+        if (!newPlaylist) return
+        await addTracksToPlaylist(newPlaylist.id, finalTracks)
+      } else {
+        if (!organizerSession.targetPlaylistId) return
+        await addTracksToPlaylist(organizerSession.targetPlaylistId, finalTracks)
+      }
 
-      const user = await getCurrentUser()
-      if (!user) return
-      const newPlaylist = await createPlaylist(user.id, newPlaylistName)
-      if (!newPlaylist) return
-      await addTracksToPlaylist(newPlaylist.id, tracks)
-
-      arrowLottieLight?.stop()
-      arrowLottieDark?.stop()
+      setAddedTracksCount(finalTracks.length)
       setProcessingStatus(ProcessingStatus.Done)
+      setOrganizerSession(null)
+      toast.success(`Added ${finalTracks.length} songs to "${organizerSession.playlistName}"`)
     } catch (error) {
+      // EXPLAIN: 儲存失敗時保留 organizer 開啟，讓使用者可以直接重試
+      setProcessingStatus(ProcessingStatus.Idle)
       setIsError(true)
       console.error('Error occurred while adding tracks to playlist:', error)
     }
@@ -202,11 +231,12 @@ export default function Dashboard() {
             </Label>
           </div>
         </RadioGroup>
+
       </section>
 
       {processingStatus === ProcessingStatus.Processing && (
         <p className="h-10 truncate text-sm text-primary">
-          Adding tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
+          Fetching tracks from &quot;<span className="font-medium">{processingAlbum}</span>&quot;...
         </p>
       )}
 
@@ -217,14 +247,23 @@ export default function Dashboard() {
       )}
 
       <div className="mt-4 flex justify-center">
-        <Button
-          className="mx-auto"
-          disabled={isButtonDisabled}
-          onClick={playlistActionType === 'existing' ? startWithExistingPlaylist : startWithNewPlaylist}
-        >
+        <Button className="mx-auto" disabled={isButtonDisabled} onClick={handleStart}>
           Start
         </Button>
       </div>
+
+      {organizerSession && (
+        <PlaylistOrganizer
+          open
+          onOpenChange={(open) => {
+            if (!open) setOrganizerSession(null)
+          }}
+          mode={organizerSession.mode}
+          playlistName={organizerSession.playlistName}
+          initialItems={organizerSession.items}
+          onSave={handleOrganizerSave}
+        />
+      )}
 
       <Dialog open={isError}>
         <DialogContent className="max-w-[250px] rounded outline-none [&>button]:hidden">

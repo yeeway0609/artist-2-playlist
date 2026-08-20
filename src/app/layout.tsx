@@ -7,6 +7,7 @@ import AuthSessionProvider from '@/components/AuthSessionProvider'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import { ThemeProvider } from '@/components/ThemeProvider.tsx'
+import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   title: 'Artist2Playlist for Spotify',
@@ -45,6 +46,7 @@ export default async function RootLayout({
               <main className="flex flex-grow flex-col items-center px-5">{children}</main>
             </div>
             <Footer />
+            <Toaster />
           </ThemeProvider>
         </body>
       </AuthSessionProvider>
