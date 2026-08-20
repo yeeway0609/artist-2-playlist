@@ -58,6 +58,12 @@ const albumTypeLabels = {
 const LOTTIE_URL_WHITE = 'https://lottie.host/e0a7567a-3fd4-401f-80b7-52f41c8a8b7d/trvhjG7OJ0.lottie'
 const LOTTIE_URL_BLACK = 'https://lottie.host/1533e124-3390-4754-93cc-c08bcecbb0d7/AzwvLr5fRz.lottie'
 
+// EXPLAIN: 只有 token / OAuth 類錯誤才需要重新登入（SDK 的 401/403 錯誤訊息），
+// 其餘（rate limit、網路）用 toast 提示重試即可，不用逼使用者登出
+function isAuthError(error: unknown): boolean {
+  return error instanceof Error && /token|re-authenticate|oauth/i.test(error.message)
+}
+
 export default function Dashboard() {
   const [isError, setIsError] = useState(false)
   const [arrowLottieLight, setArrowLottieLight] = useState<DotLottieWorker | null>(null)
@@ -129,7 +135,8 @@ export default function Dashboard() {
         })
       }
     } catch (error) {
-      setIsError(true)
+      if (isAuthError(error)) setIsError(true)
+      else toast.error('Failed to fetch tracks. Please try again.')
       console.error('Error occurred while fetching tracks:', error)
     } finally {
       arrowLottieLight?.stop()
@@ -157,7 +164,8 @@ export default function Dashboard() {
         snapshotId,
       })
     } catch (error) {
-      setIsError(true)
+      if (isAuthError(error)) setIsError(true)
+      else toast.error('Failed to load the playlist. Please try again.')
       console.error('Error occurred while fetching playlist items:', error)
     }
   }
@@ -208,10 +216,12 @@ export default function Dashboard() {
       setOrganizerSession(null)
       toast.success(`Added ${finalTracks.length} songs to "${organizerSession.playlistName}"`)
     } catch (error) {
-      // EXPLAIN: 儲存失敗時保留 organizer 開啟，讓使用者可以直接重試
+      // EXPLAIN: 儲存失敗時保留 organizer 開啟，讓使用者可以直接重試；
+      // 分批寫入可能中斷在一半，提示歌單可能只更新了部分
       setProcessingStatus(ProcessingStatus.Idle)
-      setIsError(true)
-      console.error('Error occurred while adding tracks to playlist:', error)
+      if (isAuthError(error)) setIsError(true)
+      else toast.error('Saving failed — the playlist may be partially updated. Please try again.')
+      console.error('Error occurred while saving playlist:', error)
     }
   }
 

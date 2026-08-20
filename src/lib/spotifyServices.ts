@@ -23,7 +23,7 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 
 export async function getCurrentUser() {
   try {
-    const response = await sdk.currentUser.profile()
+    const response = await withRetry(() => sdk.currentUser.profile())
     return response
   } catch (error) {
     throw error
@@ -32,7 +32,7 @@ export async function getCurrentUser() {
 
 export async function searchArtist(query: string) {
   try {
-    const response = await sdk.search(query, ['artist'])
+    const response = await withRetry(() => sdk.search(query, ['artist']))
     return response.artists.items
   } catch (error) {
     throw error
@@ -46,7 +46,7 @@ export async function getCurrentUserPlaylists() {
     let hasNext = true
 
     while (hasNext) {
-      const response = await sdk.currentUser.playlists.playlists(50, offset)
+      const response = await withRetry(() => sdk.currentUser.playlists.playlists(50, offset))
       if (!response) break
 
       playlists.push(...response.items)
@@ -71,7 +71,7 @@ export async function getAlbumsFromArtist(
     let hasNext = true
 
     while (hasNext) {
-      const response = await sdk.artists.albums(id, includeGroups, undefined, 50, offset)
+      const response = await withRetry(() => sdk.artists.albums(id, includeGroups, undefined, 50, offset))
       if (!response) break
 
       albums.push(...response.items)
@@ -93,7 +93,7 @@ export async function getTracksFromAlbum(albumID: string, artistId?: string): Pr
     let hasNext = true
 
     while (hasNext) {
-      const response = await sdk.albums.tracks(albumID, undefined, 50, offset)
+      const response = await withRetry(() => sdk.albums.tracks(albumID, undefined, 50, offset))
       if (!response) break
 
       // EXPLAIN: Filter tracks by artist id if provided
@@ -120,7 +120,7 @@ export async function addTracksToPlaylist(playlistId: string, tracks: Simplified
   try {
     for (let i = 0; i < tracksUri.length; i += BATCH_SIZE) {
       const batch = tracksUri.slice(i, i + BATCH_SIZE)
-      await sdk.playlists.addItemsToPlaylist(playlistId, batch)
+      await withRetry(() => sdk.playlists.addItemsToPlaylist(playlistId, batch))
     }
   } catch (error) {
     throw error
@@ -129,7 +129,7 @@ export async function addTracksToPlaylist(playlistId: string, tracks: Simplified
 
 export async function createPlaylist(userId: string, name: string) {
   try {
-    const response = await sdk.playlists.createPlaylist(userId, { name })
+    const response = await withRetry(() => sdk.playlists.createPlaylist(userId, { name }))
     return response
   } catch (error) {
     throw error

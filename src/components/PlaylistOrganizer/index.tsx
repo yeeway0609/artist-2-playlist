@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Loader2 } from 'lucide-react'
@@ -65,10 +65,19 @@ export default function PlaylistOrganizer({
   } = useOrganizerItems(initialItems)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
   const visibleItems = showOnlyNew ? items.filter((item) => !item.isExisting) : items
+  // EXPLAIN: 用 ref 記錄是否有未儲存變更，避免 state 更新讓 memo 化的 TrackRow 全部重渲染
+  const isDirtyRef = useRef(false)
+
+  function requestClose() {
+    if (isSaving) return
+    if (isDirtyRef.current && !window.confirm('Discard your changes?')) return
+    onOpenChange(false)
+  }
 
   // EXPLAIN: 過濾「只顯示新歌」時，上下移要以可見清單的鄰居為目標，否則會與隱藏的項目交換而看起來沒動
   const handleMove = useCallback(
     (key: string, direction: -1 | 1) => {
+      isDirtyRef.current = true
       if (!showOnlyNew) return moveItem(key, direction)
 
       const visible = items.filter((item) => !item.isExisting)
@@ -79,7 +88,16 @@ export default function PlaylistOrganizer({
     [showOnlyNew, items, moveItem, reorder]
   )
 
+  const handleToggleExclude = useCallback(
+    (key: string) => {
+      isDirtyRef.current = true
+      toggleExclude(key)
+    },
+    [toggleExclude]
+  )
+
   function handleMatchStrategyChange(strategy: MatchStrategy) {
+    isDirtyRef.current = true
     setMatchStrategy(strategy)
     applyIsExisting((item) =>
       strategy === MatchStrategy.ById
@@ -91,6 +109,7 @@ export default function PlaylistOrganizer({
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (over && active.id !== over.id) {
+      isDirtyRef.current = true
       reorder(String(active.id), String(over.id))
     }
   }
@@ -105,7 +124,7 @@ export default function PlaylistOrganizer({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(value) => !isSaving && onOpenChange(value)}>
+    <Dialog open={open} onOpenChange={(value) => (value ? onOpenChange(value) : requestClose())}>
       <DialogContent
         className="left-0 top-0 flex h-dvh max-w-full translate-x-0 translate-y-0 flex-col gap-0 border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[90dvh] sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:border"
         onInteractOutside={(e) => e.preventDefault()}
@@ -151,12 +170,22 @@ export default function PlaylistOrganizer({
           )}
           <FilterBar
             onExcludeDuplicates={() => {
+              isDirtyRef.current = true
               const count = excludeDuplicates()
               toast.info(`Excluded ${count} songs with duplicate titles`)
             }}
-            onRestoreAll={restoreAll}
+            onRestoreAll={() => {
+              isDirtyRef.current = true
+              restoreAll()
+            }}
           />
-          <SortMenu sortKey={sortKey} onSortChange={sortBy} />
+          <SortMenu
+            sortKey={sortKey}
+            onSortChange={(key) => {
+              isDirtyRef.current = true
+              sortBy(key)
+            }}
+          />
         </DialogHeader>
 
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -168,7 +197,7 @@ export default function PlaylistOrganizer({
                   item={item}
                   isFirst={index === 0}
                   isLast={index === visibleItems.length - 1}
-                  onToggleExclude={toggleExclude}
+                  onToggleExclude={handleToggleExclude}
                   onMove={handleMove}
                 />
               ))}
@@ -177,7 +206,7 @@ export default function PlaylistOrganizer({
         </DndContext>
 
         <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
-          <Button variant="outline" disabled={isSaving} onClick={() => onOpenChange(false)}>
+          <Button variant="outline" disabled={isSaving} onClick={requestClose}>
             Cancel
           </Button>
           <Button disabled={isSaving || includedCount === 0 || uneditableCount > 0} onClick={handleSave}>

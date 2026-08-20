@@ -3,6 +3,7 @@ import { SimplifiedPlaylist } from '@spotify/web-api-ts-sdk'
 import clsx from 'clsx'
 import { ChevronDown, ListMusic, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { getCurrentUserPlaylists } from '@/lib/spotifyServices'
 
 type MyPlaylistsProps = {
@@ -55,7 +56,13 @@ export default function MyPlaylists({ onSelect, onError }: MyPlaylistsProps) {
 
       {isExpanded && (
         <div className="mt-3">
-          {isLoading && <Loader2 className="mx-auto my-4 size-5 animate-spin text-muted-foreground" />}
+          {isLoading &&
+            Array.from({ length: 3 }, (_, i) => (
+              <div className="flex items-center gap-3 px-2 py-2" key={i}>
+                <Skeleton className="size-10 shrink-0 rounded" />
+                <Skeleton className="h-4 flex-1" />
+              </div>
+            ))}
 
           <ul className="max-h-72 overflow-y-auto">
             {playlists?.map((playlist) => (
