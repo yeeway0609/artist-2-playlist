@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { SimplifiedAlbum } from '@spotify/web-api-ts-sdk'
 import { AlbumOrder, AlbumType } from '@/lib/enums'
 import { getAlbumsFromArtist, getTracksFromAlbum } from '@/lib/spotifyServices'
-import { TrackWithAlbum, withAlbum } from '@/lib/types'
+import { withAlbum } from '@/lib/tracks'
+import { TrackWithAlbum } from '@/lib/types'
 
 function sortAlbumsByReleaseDate(albums: SimplifiedAlbum[], order: AlbumOrder): SimplifiedAlbum[] {
   return albums.sort((a, b) => {
@@ -50,5 +51,9 @@ export function useArtistTracks() {
     return tracks
   }
 
-  return { fetchArtistTracks, processingAlbum, fetchedTracksCount }
+  return {
+    fetchArtistTracks,
+    processingAlbum,
+    fetchedTracksCount,
+  }
 }

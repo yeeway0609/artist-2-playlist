@@ -17,11 +17,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlbumOrder, AlbumType, ProcessingStatus } from '@/lib/enums'
 import { addTracksToPlaylist, createPlaylist, getCurrentUser } from '@/lib/spotifyServices'
-import { removeDuplicateTracks } from '@/lib/trackFilters'
 import SelectArtist from './SelectArtist'
 import SelectPlaylist from './SelectPlaylist'
 import { useArtistTracks } from './useArtistTracks'
@@ -51,7 +49,6 @@ export default function Dashboard() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<SimplifiedPlaylist | null>(null)
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [albumOrder, setAlbumOrder] = useState<AlbumOrder>(AlbumOrder.Asc)
-  const [isRemoveDuplicatesEnabled, setIsRemoveDuplicatesEnabled] = useState(false)
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>(ProcessingStatus.Idle)
   const [addedTracksCount, setAddedTracksCount] = useState(0)
   const { fetchArtistTracks, processingAlbum } = useArtistTracks()
@@ -80,11 +77,7 @@ export default function Dashboard() {
       arrowLottieLight?.play()
       arrowLottieDark?.play()
 
-      let tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
-
-      if (isRemoveDuplicatesEnabled) {
-        tracks = removeDuplicateTracks(tracks)
-      }
+      const tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
       setAddedTracksCount(tracks.length)
 
       await addTracksToPlaylist(selectedPlaylist.id, tracks)
@@ -107,11 +100,7 @@ export default function Dashboard() {
       arrowLottieLight?.play()
       arrowLottieDark?.play()
 
-      let tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
-
-      if (isRemoveDuplicatesEnabled) {
-        tracks = removeDuplicateTracks(tracks)
-      }
+      const tracks = await fetchArtistTracks(selectedArtist.id, includedAlbumTypes, albumOrder)
       setAddedTracksCount(tracks.length)
 
       const user = await getCurrentUser()
@@ -213,18 +202,6 @@ export default function Dashboard() {
             </Label>
           </div>
         </RadioGroup>
-
-        <h3 className="mb-2 mt-3 font-medium">Duplicate songs</h3>
-        <div className="flex items-center gap-x-2">
-          <Switch
-            id="remove-duplicate"
-            checked={isRemoveDuplicatesEnabled}
-            onCheckedChange={() => setIsRemoveDuplicatesEnabled((prev) => !prev)}
-          />
-          <Label htmlFor="remove-duplicate" className={isRemoveDuplicatesEnabled ? '' : 'text-muted-foreground'}>
-            Remove songs with duplicate titles
-          </Label>
-        </div>
       </section>
 
       {processingStatus === ProcessingStatus.Processing && (
